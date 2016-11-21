@@ -6,6 +6,8 @@
   var $ = root.jQuery;
   var URI = root.URI;
 
+  var unused = $.noop;
+
   var assert = function (result) {
     if (result) {
       return result;
@@ -13,8 +15,6 @@
       throw new Error("assertion failed!");
     }
   };
-
-  var unused = $.noop;
 
   var path_to_key = function (path) {
     assert(/^\//.exec(path));
@@ -26,22 +26,52 @@
     return "/" + key;
   };
 
+  var basename = function (path) {
+    var result = /([^\/]+)\/*$/.exec(path);
+    if (result) {
+      return result[1];
+    } else if (path === "//") {
+      return "//";
+    } else if (/^\//.exec(path)) {
+      return "/";
+    } else {
+      return ".";
+    }
+  };
+
+  var dirname = function (path) {
+    var result = /^(.*[^\/])\/+[^\/]+\/*/.exec(path);
+    if (result) {
+      return result[1];
+    } else if (/^\/\/[^\/]/.exec(path) || path === "//") {
+      return "//";
+    } else if (/^\//.exec(path)) {
+      return "/";
+    } else {
+      return ".";
+    }
+  };
+
+  unused(basename, dirname);
+
+
+
   var page_uri = new URI();
   var page_query = URI.parseQuery(page_uri.query());
   var page_key = path_to_key(page_uri.path(true));
   var page_prefix = path_to_key(page_uri.directory(true) + "/");
 
-  var self_prefix;
+  var this_prefix;
   if (page_query.prefix) {
-    self_prefix = page_query.prefix;
+    this_prefix = page_query.prefix;
   } else {
-    self_prefix = page_prefix;
+    this_prefix = page_prefix;
   }
 
   var ignore_keys = {};
   ignore_keys[page_key] = true;
   ignore_keys[page_prefix] = true;
-  ignore_keys[self_prefix] = true;
+  ignore_keys[this_prefix] = true;
 
   var root_uri = page_uri.clone().path("/").search("");
 
@@ -134,7 +164,7 @@
       delimiter: "/",
       "max-keys": 100,
       "continuation-token": continuation_token,
-      prefix: self_prefix
+      prefix: this_prefix
     };
 
     $.ajax(root_uri.toString(), {
