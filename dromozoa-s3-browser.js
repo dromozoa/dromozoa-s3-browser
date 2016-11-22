@@ -120,20 +120,25 @@
     var $ul = $("<ul>", { "class": "breadcrumb" });
     var text = page_prefix.substring(0, page_prefix.length - 1);
 
-    $ul.append($("<li>")
-      .append($("<a>", {
-        href: root_uri.clone().path(page_uri.path(true)),
-        text: text
-      }))
-    );
-    for (var i = page_segs.length; i !== this_segs.length; i = i + 1) {
+    for (var i = 0; i < this_segs.length; i = i + 1) {
       var seg = this_segs[i];
-      $ul.append($("<li>")
-        .append($("<a>", {
-          href: root_uri.clone().path(page_uri.path(true)).query({ prefix: path_to_key(seg.path) }).toString(),
-          text: seg.name
-        }))
-      );
+      if (i < page_segs.length - 1) {
+        $ul.append($("<li>", { text: seg.name }));
+      } else if (i === page_segs.length - 1) {
+        $ul.append($("<li>")
+          .append($("<a>", {
+            href: root_uri.clone().path(page_uri.path(true)),
+            text: seg.name
+          }))
+        );
+      } else {
+        $ul.append($("<li>")
+          .append($("<a>", {
+            href: root_uri.clone().path(page_uri.path(true)).query({ prefix: path_to_key(seg.path) }).toString(),
+            text: seg.name
+          }))
+        );
+      }
     }
 
     return $ul;
