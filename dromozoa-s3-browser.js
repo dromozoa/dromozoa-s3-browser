@@ -114,14 +114,12 @@
 
   var create_breadcrumb = function () {
     assert(this_prefix.startsWith(page_prefix));
-    var this_segs = path_to_segments(key_to_path(this_prefix))
-    var page_segs = path_to_segments(key_to_path(page_prefix))
+    var this_segs = path_to_segments(key_to_path(this_prefix));
+    var page_segs = path_to_segments(key_to_path(page_prefix));
 
     var $ul = $("<ul>", { "class": "breadcrumb" });
-    var text = page_prefix.substring(0, page_prefix.length - 1);
 
-    for (var i = 0; i < this_segs.length; i = i + 1) {
-      var seg = this_segs[i];
+    $.each(this_segs, function (i, seg) {
       if (i < page_segs.length - 1) {
         $ul.append($("<li>", { text: seg.name }));
       } else if (i === page_segs.length - 1) {
@@ -139,7 +137,7 @@
           }))
         );
       }
-    }
+    });
 
     return $ul;
   };
