@@ -16,23 +16,13 @@
     }
   };
 
-  var path_to_key = function (path) {
-    assert(/^\//.exec(path));
-    return path.substring(1);
-  };
-
-  var key_to_path = function (key) {
-    assert(!(/^\//).exec(key));
-    return "/" + key;
-  };
-
   var basename = function (path) {
     var result = /([^\/]+)\/*$/.exec(path);
     if (result) {
       return result[1];
     } else if (path === "//") {
       return "//";
-    } else if (/^\//.exec(path)) {
+    } else if (path.startsWith("/")) {
       return "/";
     } else {
       return ".";
@@ -45,14 +35,38 @@
       return result[1];
     } else if (/^\/\/[^\/]/.exec(path) || path === "//") {
       return "//";
-    } else if (/^\//.exec(path)) {
+    } else if (path.startsWith("/")) {
       return "/";
     } else {
       return ".";
     }
   };
 
-  unused(basename, dirname);
+  var path_to_key = function (path) {
+    assert(path.startsWith("/"));
+    return path.substring(1);
+  };
+
+  var key_to_path = function (key) {
+    assert(!key.startsWith("/"));
+    return "/" + key;
+  };
+
+  var path_to_segments = function (path) {
+    var result = [];
+    while (path !== "/") {
+      result.unshift({
+        path: path,
+        name: basename(path)
+      });
+      path = dirname(path);
+      assert(path !== "//" && path !== ".");
+      if (path !== "/") {
+        path = path + "/";
+      }
+    }
+    return result;
+  };
 
 
 
@@ -99,10 +113,30 @@
   };
 
   var create_breadcrumb = function () {
-    return $("<ul>", { "class": "breadcrumb" })
-      .append($("<li>", { text: "foo" }))
-      .append($("<li>", { text: "bar" }))
-      .append($("<li>", { text: "baz" }));
+    assert(this_prefix.startsWith(page_prefix));
+    var this_segs = path_to_segments(key_to_path(this_prefix))
+    var page_segs = path_to_segments(key_to_path(page_prefix))
+
+    var $ul = $("<ul>", { "class": "breadcrumb" });
+    var text = page_prefix.substring(0, page_prefix.length - 1);
+
+    $ul.append($("<li>")
+      .append($("<a>", {
+        href: root_uri.clone().path(page_uri.path(true)),
+        text: text
+      }))
+    );
+    for (var i = page_segs.length; i !== this_segs.length; i = i + 1) {
+      var seg = this_segs[i];
+      $ul.append($("<li>")
+        .append($("<a>", {
+          href: root_uri.clone().path(page_uri.path(true)).query({ prefix: path_to_key(seg.path) }).toString(),
+          text: seg.name
+        }))
+      );
+    }
+
+    return $ul;
   };
 
   var create_table = function () {
