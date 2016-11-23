@@ -68,7 +68,19 @@
     return result;
   };
 
-
+  var list_objects = function (uri, prefix, continuation_token) {
+    return $.ajax(uri.toString(), {
+      cache: false,
+      dataType: "xml",
+      data: {
+        "max-keys": 1000,
+        delimiter: "/",
+        prefix: prefix,
+        "list-type": 2,
+        "continuation-token": continuation_token
+      }
+    });
+  };
 
   var page_uri = new URI();
   var page_query = URI.parseQuery(page_uri.query());
@@ -196,40 +208,24 @@
   };
 
   module.list = function (continuation_token) {
-    var query = {
-      "list-type": 2,
-      delimiter: "/",
-      "max-keys": 100,
-      "continuation-token": continuation_token,
-      prefix: this_prefix
-    };
-
-    $.ajax(root_uri.toString(), {
-      method: "GET",
-      dataType: "xml",
-      data: query,
-      success: function (root) {
-        var $root = $(root);
-        $root.find("CommonPrefixes").each(function (i, node) {
-          unused(i);
-          var item = create_item_from_common_prefix_node($(node));
-          if (item) {
-            $("tbody").append(module.create_tr(item));
-          }
-        });
-        $root.find("Contents").each(function (i, node) {
-          unused(i);
-          var item = create_item_from_content_node($(node));
-          if (item) {
-            $("tbody").append(module.create_tr(item));
-          }
-        });
-        if ($root.find("IsTruncated").text() === "true") {
-          module.list($root.find("NextContinuationToken").text());
+    list_objects(root_uri, this_prefix, continuation_token).done(function (root) {
+      var $root = $(root);
+      $root.find("CommonPrefixes").each(function (i, node) {
+        unused(i);
+        var item = create_item_from_common_prefix_node($(node));
+        if (item) {
+          $("tbody").append(module.create_tr(item));
         }
-      },
-      error: function (e) {
-        $.noop(e);
+      });
+      $root.find("Contents").each(function (i, node) {
+        unused(i);
+        var item = create_item_from_content_node($(node));
+        if (item) {
+          $("tbody").append(module.create_tr(item));
+        }
+      });
+      if ($root.find("IsTruncated").text() === "true") {
+        module.list($root.find("NextContinuationToken").text());
       }
     });
   };
