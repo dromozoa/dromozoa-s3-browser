@@ -5,6 +5,7 @@
   var Error = root.Error;
   var $ = root.jQuery;
   var URI = root.URI;
+  var bootbox = root.bootbox;
 
   var unused = $.noop;
 
@@ -12,6 +13,7 @@
     if (result) {
       return result;
     } else {
+      bootbox.alert("assertion failed!");
       throw new Error("assertion failed!");
     }
   };
