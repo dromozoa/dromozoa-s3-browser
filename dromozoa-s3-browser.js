@@ -2,8 +2,6 @@
 (function (root) {
   "use strict";
   var $ = root.jQuery;
-  var URI = root.URI;
-
   var unused = $.noop;
 
   var error = function (message) {
@@ -73,6 +71,44 @@
     return result;
   };
 
+  var format_int = function (fill, width, value) {
+    var result = value.toString();
+    while (result.length < width) {
+      result = fill + result;
+    }
+    return result;
+  };
+
+  var format_date = function (value) {
+    if (value) {
+      return format_int("0", 4, value.getFullYear())
+        + "-" + format_int("0", 2, value.getMonth() + 1)
+        + "-" + format_int("0", 2, value.getDate())
+        + " " + format_int("0", 2, value.getHours())
+        + ":" + format_int("0", 2, value.getMinutes())
+        + ":" + format_int("0", 2, value.getSeconds());
+    }
+  };
+
+  var format_size = function (value) {
+    if (value) {
+      var units = [ "", " KiB", " MiB", " GiB", " TiB", " PiB", " EiB", "ZiB", "YiB" ];
+      var result = value.toFixed(0);
+      $.each(units, function (i, unit) {
+        if (value < 1024) {
+          if (value >= 100 || root.Math.abs(value - root.Math.round(value)) < 0.05) {
+            result = value.toFixed(0) + units[i];
+          } else {
+            result = value.toFixed(1) + units[i];
+          }
+          return false;
+        }
+        value = value / 1024;
+      });
+      return result;
+    }
+  };
+
   var list_bucket = function (uri, prefix, continuation_token) {
     return $.ajax(uri.toString(), {
       cache: false,
@@ -119,8 +155,8 @@
     });
   };
 
-  var page_uri = new URI();
-  var page_query = URI.parseQuery(page_uri.query());
+  var page_uri = new root.URI();
+  var page_query = root.URI.parseQuery(page_uri.query());
   var page_prefix = path_to_key(page_uri.directory(true) + "/");
 
   var this_prefix;
@@ -169,10 +205,10 @@
           .append($("<th>")
             .append($("<a>", { text: "Name" }))
           )
-          .append($("<th>")
+          .append($("<th>", { "class": "hidden-xs", css: { width: "12em" }})
             .append($("<a>", { text: "Last Modified" }))
           )
-          .append($("<th>")
+          .append($("<th>", { css: { width: "6em" }})
             .append($("<a>", { text: "Size" }))
           )
         )
@@ -205,8 +241,8 @@
         .append($("<span>", { text: " " }))
         .append($("<a>", { href: href, text: name }))
       )
-      .append($("<td>", { text: item.last_modified }))
-      .append($("<td>", { text: item.size }));
+      .append($("<td>", { "class": "hidden-xs", text: format_date(item.last_modified) }))
+      .append($("<td>", { "class": "text-right", text: format_size(item.size) }));
   };
 
   var module;
