@@ -6,15 +6,18 @@
 
   var unused = $.noop;
 
+  var error = function (message) {
+    if (root.bootbox) {
+      root.bootbox.alert(message);
+    }
+    throw new root.Error(message);
+  };
+
   var assert = function (result) {
     if (result) {
       return result;
-    } else {
-      if (root.bootbox) {
-        root.bootbox.alert("assertion failed!");
-      }
-      throw new root.Error("assertion failed!");
     }
+    error("assertion failed!");
   };
 
   var basename = function (path) {
@@ -81,41 +84,39 @@
         "list-type": 2,
         "continuation-token": continuation_token
       }
+    }).then(function (doc) {
+      var $root = $(doc).children().first();
+      var result = {
+        name: $root.children("Name").text(),
+        prefix: $root.children("Prefix").text(),
+        key_count: root.parseInt($root.children("KeyCount").text()),
+        max_keys: root.parseInt($root.children("MaxKeys").text()),
+        delimiter: $root.children("Delimiter").text(),
+        is_truncated: $root.children("IsTruncated").text() === "true",
+        contents: $root.children("Contents").map(function (i, elem) {
+          unused(i);
+          var $elem = $(elem);
+          return {
+            key: $elem.children("Key").text(),
+            last_modified: new root.Date(root.Date.parse($elem.children("LastModified").text())),
+            etag: $elem.children("ETag").text(),
+            size: root.parseInt($elem.children("Size").text()),
+            storage_class: $elem.children("StorageClass").text()
+          };
+        }),
+        common_prefixes: $root.children("CommonPrefixes").map(function (i, elem) {
+          unused(i);
+          var $elem = $(elem);
+          return {
+            prefix: $elem.children("Prefix").text()
+          };
+        })
+      };
+      if (result.is_truncated) {
+        result.next_continuation_token = $root.children("NextContinuationToken").text();
+      }
+      return new $.Deferred().resolve(result).promise();
     });
-  };
-
-  var list_bucket_result = function (doc) {
-    var $root = $(doc).children().first();
-    var result = {
-      name: $root.children("Name").text(),
-      prefix: $root.children("Prefix").text(),
-      key_count: root.parseInt($root.children("KeyCount").text()),
-      max_keys: root.parseInt($root.children("MaxKeys").text()),
-      delimiter: $root.children("Delimiter").text(),
-      is_truncated: $root.children("IsTruncated").text() === "true",
-      contents: $root.children("Contents").map(function (i, elem) {
-        unused(i);
-        var $elem = $(elem);
-        return {
-          key: $elem.children("Key").text(),
-          last_modified: new root.Date(root.Date.parse($elem.children("LastModified").text())),
-          etag: $elem.children("ETag").text(),
-          size: root.parseInt($elem.children("Size").text()),
-          storage_class: $elem.children("StorageClass").text()
-        };
-      }),
-      common_prefixes: $root.children("CommonPrefixes").map(function (i, elem) {
-        unused(i);
-        var $elem = $(elem);
-        return {
-          prefix: $elem.children("Prefix").text()
-        };
-      })
-    };
-    if (result.is_truncated) {
-      result.next_continuation_token = $root.children("NextContinuationToken").text();
-    }
-    return result;
   };
 
   var page_uri = new URI();
@@ -224,9 +225,7 @@
   };
 
   module.list = function (continuation_token) {
-    list_bucket(root_uri, this_prefix, continuation_token).done(function (root) {
-      var result = list_bucket_result(root);
-
+    list_bucket(root_uri, this_prefix, continuation_token).done(function (result) {
       result.contents.filter(function (i, item) {
         unused(i);
         return !ignore_keys[item.key];
