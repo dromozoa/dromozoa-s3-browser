@@ -70,18 +70,45 @@
     return result;
   };
 
-  var list_objects = function (uri, prefix, continuation_token) {
+  var list_bucket = function (uri, prefix, continuation_token) {
     return $.ajax(uri.toString(), {
       cache: false,
       dataType: "xml",
       data: {
-        "max-keys": 1000,
+        "max-keys": 2,
         delimiter: "/",
         prefix: prefix,
         "list-type": 2,
         "continuation-token": continuation_token
       }
     });
+  };
+
+  var convert_list_bucket_result = function (document) {
+    var $root = $(document).children().first();
+    var result = {
+      prefix: $root.children("Prefix").text(),
+      next_continuation_token: $root.children("NextContinuationToken").text(),
+      is_truncated: $root.children("IsTruncated").text() === "true",
+      contents: $root.children("Contents").map(function (i, element) {
+        unused(i);
+        var $element = $(element);
+        return {
+          key: $element.children("Key").text(),
+          last_modified: new Date(Date.parse($element.children("LastModified").text())),
+          size: root.parseInt($element.children("Size").text())
+        };
+      }),
+      common_prefixes: $root.children("CommonPrefixes").map(function (i, element) {
+        unused(i);
+        var $element = $(element);
+        return {
+          prefix: $element.children("Prefix").text()
+        };
+      })
+    };
+    console.log(result);
+    return result;
   };
 
   var page_uri = new URI();
@@ -210,7 +237,8 @@
   };
 
   module.list = function (continuation_token) {
-    list_objects(root_uri, this_prefix, continuation_token).done(function (root) {
+    list_bucket(root_uri, this_prefix, continuation_token).done(function (root) {
+      convert_list_bucket_result(root);
       var $root = $(root);
       $root.find("CommonPrefixes").each(function (i, node) {
         unused(i);
