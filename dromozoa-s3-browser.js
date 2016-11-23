@@ -121,7 +121,6 @@
 
   var page_uri = new URI();
   var page_query = URI.parseQuery(page_uri.query());
-  var page_key = path_to_key(page_uri.path(true));
   var page_prefix = path_to_key(page_uri.directory(true) + "/");
 
   var this_prefix;
@@ -130,11 +129,6 @@
   } else {
     this_prefix = page_prefix;
   }
-
-  var ignore_keys = {};
-  ignore_keys[page_key] = true;
-  ignore_keys[page_prefix] = true;
-  ignore_keys[this_prefix] = true;
 
   var root_uri = page_uri.clone().path("/").search("");
 
@@ -228,16 +222,13 @@
     list_bucket(root_uri, this_prefix, continuation_token).done(function (result) {
       result.contents.filter(function (i, item) {
         unused(i);
-        return !ignore_keys[item.key];
+        return item.key !== result.prefix;
       }).each(function (i, item) {
         unused(i);
         $("tbody").append(create_tr(item));
       });
 
-      result.common_prefixes.filter(function (i, item) {
-        unused(i);
-        return !ignore_keys[item.prefix];
-      }).each(function (i, item) {
+      result.common_prefixes.each(function (i, item) {
         unused(i);
         $("tbody").append(create_tr(item));
       });
