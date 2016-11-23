@@ -1,11 +1,8 @@
 /*jslint this, white*/
 (function (root) {
   "use strict";
-  var Date = root.Date;
-  var Error = root.Error;
   var $ = root.jQuery;
   var URI = root.URI;
-  var bootbox = root.bootbox;
 
   var unused = $.noop;
 
@@ -13,8 +10,10 @@
     if (result) {
       return result;
     } else {
-      bootbox.alert("assertion failed!");
-      throw new Error("assertion failed!");
+      if (root.bootbox) {
+        root.bootbox.alert("assertion failed!");
+      }
+      throw new root.Error("assertion failed!");
     }
   };
 
@@ -63,9 +62,10 @@
       });
       path = dirname(path);
       assert(path !== "//" && path !== ".");
-      if (path !== "/") {
-        path = path + "/";
+      if (path === "/") {
+        break;
       }
+      path = path + "/";
     }
     return result;
   };
@@ -84,30 +84,37 @@
     });
   };
 
-  var convert_list_bucket_result = function (document) {
-    var $root = $(document).children().first();
+  var list_bucket_result = function (doc) {
+    var $root = $(doc).children().first();
     var result = {
+      name: $root.children("Name").text(),
       prefix: $root.children("Prefix").text(),
-      next_continuation_token: $root.children("NextContinuationToken").text(),
+      key_count: root.parseInt($root.children("KeyCount").text()),
+      max_keys: root.parseInt($root.children("MaxKeys").text()),
+      delimiter: $root.children("Delimiter").text(),
       is_truncated: $root.children("IsTruncated").text() === "true",
-      contents: $root.children("Contents").map(function (i, element) {
+      contents: $root.children("Contents").map(function (i, elem) {
         unused(i);
-        var $element = $(element);
+        var $elem = $(elem);
         return {
-          key: $element.children("Key").text(),
-          last_modified: new Date(Date.parse($element.children("LastModified").text())),
-          size: root.parseInt($element.children("Size").text())
+          key: $elem.children("Key").text(),
+          last_modified: new root.Date(root.Date.parse($elem.children("LastModified").text())),
+          etag: $elem.children("ETag").text(),
+          size: root.parseInt($elem.children("Size").text()),
+          storage_class: $elem.children("StorageClass").text()
         };
       }),
-      common_prefixes: $root.children("CommonPrefixes").map(function (i, element) {
+      common_prefixes: $root.children("CommonPrefixes").map(function (i, elem) {
         unused(i);
-        var $element = $(element);
+        var $elem = $(elem);
         return {
-          prefix: $element.children("Prefix").text()
+          prefix: $elem.children("Prefix").text()
         };
       })
     };
-    console.log(result);
+    if (result.is_truncated) {
+      result.next_continuation_token = $root.children("NextContinuationToken").text();
+    }
     return result;
   };
 
@@ -145,7 +152,7 @@
   var create_item_from_content_node = function ($node) {
     return create_item(
         $node.find("Key").text(),
-        new Date(Date.parse($node.find("LastModified").text())),
+        new root.Date(root.Date.parse($node.find("LastModified").text())),
         root.parseInt($node.find("Size").text()));
   };
 
@@ -238,7 +245,8 @@
 
   module.list = function (continuation_token) {
     list_bucket(root_uri, this_prefix, continuation_token).done(function (root) {
-      convert_list_bucket_result(root);
+      var result = list_bucket_result(root);
+
       var $root = $(root);
       $root.find("CommonPrefixes").each(function (i, node) {
         unused(i);
@@ -254,8 +262,9 @@
           $("tbody").append(module.create_tr(item));
         }
       });
-      if ($root.find("IsTruncated").text() === "true") {
-        module.list($root.find("NextContinuationToken").text());
+
+      if (result.is_truncated) {
+        module.list(result.next_continuation_token);
       }
     });
   };
