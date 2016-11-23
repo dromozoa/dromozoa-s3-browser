@@ -75,7 +75,7 @@
       cache: false,
       dataType: "xml",
       data: {
-        "max-keys": 2,
+        "max-keys": 1000,
         delimiter: "/",
         prefix: prefix,
         "list-type": 2,
@@ -137,29 +137,6 @@
 
   var root_uri = page_uri.clone().path("/").search("");
 
-  var create_item = function (key, last_modified, size) {
-    if (ignore_keys[key]) {
-      return;
-    }
-    return {
-      key: key,
-      uri: root_uri.clone().pathname(key_to_path(key)),
-      last_modified: last_modified,
-      size: size
-    };
-  };
-
-  var create_item_from_content_node = function ($node) {
-    return create_item(
-        $node.find("Key").text(),
-        new root.Date(root.Date.parse($node.find("LastModified").text())),
-        root.parseInt($node.find("Size").text()));
-  };
-
-  var create_item_from_common_prefix_node = function ($node) {
-    return create_item($node.find("Prefix").text());
-  };
-
   var create_breadcrumb = function () {
     assert(this_prefix.startsWith(page_prefix));
     var this_segs = path_to_segments(key_to_path(this_prefix));
@@ -208,28 +185,22 @@
       .append($("<tbody>"));
   };
 
-  var module;
-  module = function () {
-    var table = create_table();
-    module.list();
-    return $("<div>")
-      .append(create_breadcrumb())
-      .append(table);
-  };
+  var create_tr = function (item) {
+    var key = item.key || item.prefix;
+    var uri = root_uri.clone().pathname(key_to_path(key));
+    var segment = uri.segmentCoded();
 
-  module.create_tr = function (item) {
     var glyph;
     var href;
     var name;
-    var segment = item.uri.segmentCoded();
 
-    if (/\/$/.exec(item.key)) {
+    if (key.endsWith("/")) {
       glyph = "glyphicon glyphicon-folder-close";
-      href = page_uri.clone().search({ prefix: item.key }).toString();
+      href = page_uri.clone().search({ prefix: key }).toString();
       name = segment[segment.length - 2];
     } else {
       glyph = "glyphicon glyphicon-file";
-      href = root_uri.clone().pathname(item.key).toString();
+      href = root_uri.clone().pathname(key).toString();
       name = segment[segment.length - 1];
     }
 
@@ -243,24 +214,33 @@
       .append($("<td>", { text: item.size }));
   };
 
+  var module;
+  module = function () {
+    var table = create_table();
+    module.list();
+    return $("<div>")
+      .append(create_breadcrumb())
+      .append(table);
+  };
+
   module.list = function (continuation_token) {
     list_bucket(root_uri, this_prefix, continuation_token).done(function (root) {
       var result = list_bucket_result(root);
 
-      var $root = $(root);
-      $root.find("CommonPrefixes").each(function (i, node) {
+      result.contents.filter(function (i, item) {
         unused(i);
-        var item = create_item_from_common_prefix_node($(node));
-        if (item) {
-          $("tbody").append(module.create_tr(item));
-        }
+        return !ignore_keys[item.key];
+      }).each(function (i, item) {
+        unused(i);
+        $("tbody").append(create_tr(item));
       });
-      $root.find("Contents").each(function (i, node) {
+
+      result.common_prefixes.filter(function (i, item) {
         unused(i);
-        var item = create_item_from_content_node($(node));
-        if (item) {
-          $("tbody").append(module.create_tr(item));
-        }
+        return !ignore_keys[item.prefix];
+      }).each(function (i, item) {
+        unused(i);
+        $("tbody").append(create_tr(item));
       });
 
       if (result.is_truncated) {
