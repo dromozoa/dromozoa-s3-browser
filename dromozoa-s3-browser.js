@@ -220,12 +220,12 @@
     ]
   };
 
-  var sort = function (sort_by) {
+  var sort = function (type) {
     var $thead = $("table.dromozoa-s3-browser thead");
     var $tbody = $("table.dromozoa-s3-browser tbody");
-    var $th = $thead.find("th.sort-by-" + sort_by);
+    var $th = $thead.find("th.sort-by-" + type);
 
-    var defs = sort_definitions[sort_by];
+    var defs = sort_definitions[type];
     var state = ($th.data("sort_state") + 1) % defs.length;
     var def = defs[state];
 
@@ -238,10 +238,10 @@
     $tbody.append($tbody.children("tr").detach().sort(def.order));
   };
 
-  var sort_by = function (sort_by) {
+  var sort_by = function (type) {
     return function (ev) {
       ev.preventDefault();
-      sort(sort_by);
+      sort(type);
     };
   };
 
