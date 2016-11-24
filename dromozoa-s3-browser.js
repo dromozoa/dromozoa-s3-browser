@@ -304,7 +304,13 @@
       data.mtime = -1;
       data.size = -1;
     } else {
-      icon = "glyphicon-file";
+      if (/\.(?:gif|jpeg|jpg|jpe|png)$/i.exec(key)) {
+        icon = "glyphicon-picture";
+      } else if (/\.(?:mp4|mp4v|mpg4)$/i.exec(key)) {
+        icon = "glyphicon-film";
+      } else {
+        icon = "glyphicon-file";
+      }
       uri = get_origin_uri().path(key_to_path(key));
       data.type = "1:" + name;
       data.mtime = item.last_modified.getTime();
