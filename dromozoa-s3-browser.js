@@ -181,24 +181,18 @@
     }
   };
 
-  // sort_by: type, name, mtime, size
-  // type: 1, 2
-  // sort_order: asc, desc
-
-  // sort: { by: [ "type", "name" ], order: "asc" }
-
   var compare = function (a, b) {
     if (a < b) {
       return -1;
-    } else if (a == b) {
+    } else if (a === b) {
       return 0;
     } else {
       return 1;
     }
-  }
+  };
 
-  var comparator = function (key, order) {
-    if (order == "asc") {
+  var order_by = function (key, order) {
+    if (order === "asc") {
       return function (a, b) {
         return compare($(a).data(key), $(b).data(key));
       };
@@ -211,18 +205,18 @@
 
   var sort_definitions = {
     name: [
-      { compare: comparator("type", "asc"), icon: "glyphicon-sort-by-attributes" },
-      { compare: comparator("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" },
-      { compare: comparator("name", "asc"), icon: "glyphicon-sort-by-alphabet" },
-      { compare: comparator("name", "desc"), icon: "glyphicon-sort-by-alphabet-alt" }
+      { order: order_by("type", "asc"), icon: "glyphicon-sort-by-attributes" },
+      { order: order_by("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" },
+      { order: order_by("name", "asc"), icon: "glyphicon-sort-by-alphabet" },
+      { order: order_by("name", "desc"), icon: "glyphicon-sort-by-alphabet-alt" }
     ],
     mtime: [
-      { compare: comparator("mtime", "asc"), icon: "glyphicon-sort-by-attributes" },
-      { compare: comparator("mtime", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
+      { order: order_by("mtime", "asc"), icon: "glyphicon-sort-by-attributes" },
+      { order: order_by("mtime", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
     ],
     size: [
-      { compare: comparator("type", "asc"), icon: "glyphicon-sort-by-attributes" },
-      { compare: comparator("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
+      { order: order_by("type", "asc"), icon: "glyphicon-sort-by-attributes" },
+      { order: order_by("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
     ]
   };
 
@@ -244,12 +238,14 @@
 
     $th.data("sort_state", state);
 
-    $tbody.append($tbody.children("tr").detach().sort(definition.compare));
-  }
+    $tbody.append($tbody.children("tr").detach().sort(definition.order));
+  };
 
-  var sorter = function (ev) {
-    ev.preventDefault();
-    sort($(this).closest("th").data("sort_by"));
+  var sort_by = function (sort_by) {
+    return function (ev) {
+      ev.preventDefault();
+      sort(sort_by);
+    };
   };
 
   var create_breadcrumb = function () {
@@ -276,22 +272,19 @@
       .append($("<thead>")
         .append($("<tr>")
           .append($("<th>", { "class": "sort-by-name" })
-            .append($("<a>", { href: "#sort-by-name", text: "Name", on: { click: sorter } }))
+            .append($("<a>", { href: "#sort-by-name", text: "Name", on: { click: sort_by("name") } }))
             .append($("<span>", { text: " " }))
             .append($("<span>", { "class": "glyphicon" }))
-            .data({ sort_by: "name" })
           )
           .append($("<th>", { "class": "hidden-xs sort-by-mtime", css: { width: "12em" }})
-            .append($("<a>", { href: "#sort-by-mtime", text: "Last Modified", on: { click: sorter } }))
+            .append($("<a>", { href: "#sort-by-mtime", text: "Last Modified", on: { click: sort_by("mtime") } }))
             .append($("<span>", { text: " " }))
             .append($("<span>", { "class": "glyphicon" }))
-            .data({ sort_by: "mtime" })
           )
           .append($("<th>", { "class": "sort-by-size", css: { width: "6em" }})
-            .append($("<a>", { href: "#sort-by-size", text: "Size", on: { click: sorter }  }))
+            .append($("<a>", { href: "#sort-by-size", text: "Size", on: { click: sort_by("size") }  }))
             .append($("<span>", { text: " " }))
             .append($("<span>", { "class": "glyphicon" }))
-            .data({ sort_by: "size" })
           )
         )
       )
