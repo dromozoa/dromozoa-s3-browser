@@ -49,11 +49,6 @@
     return path.substring(1);
   };
 
-  var key_to_path = function (key) {
-    assert(!key.startsWith("/"));
-    return "/" + key;
-  };
-
   var path_to_segments = function (path) {
     var result = [];
     while (path !== "/") {
@@ -69,6 +64,15 @@
       path = path + "/";
     }
     return result;
+  };
+
+  var key_to_path = function (key) {
+    assert(!key.startsWith("/"));
+    return "/" + key;
+  };
+
+  var key_to_segments = function (key) {
+    return path_to_segments(key_to_path(key));
   };
 
   var format_int = function (fill, width, value) {
@@ -156,6 +160,20 @@
     });
   };
 
+  var get_path_prefix = function () {
+    return path_to_key(new root.URI().directory(true) + "/");
+  };
+
+  var get_prefix = function () {
+    var uri = new root.URI();
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.prefix) {
+      return query.prefix;
+    } else {
+      return get_path_prefix();
+    }
+  };
+
   // sort_by: type:name, name, mtime, size
   // type: 1, 2
   // sort_order: asc, desc
@@ -169,33 +187,22 @@
   };
 
   var page_uri = new root.URI();
-  var page_query = root.URI.parseQuery(page_uri.query());
-  var page_prefix = path_to_key(page_uri.directory(true) + "/");
-
-  var this_prefix;
-  if (page_query.prefix) {
-    this_prefix = page_query.prefix;
-  } else {
-    this_prefix = page_prefix;
-  }
-
   var root_uri = page_uri.clone().path("/").search("");
 
   var create_breadcrumb = function () {
-    assert(this_prefix.startsWith(page_prefix));
-    var index = path_to_segments(key_to_path(page_prefix)).length - 1;
+    var index = key_to_segments(get_path_prefix()).length - 1;
     return $("<ul>", { "class": "breadcrumb" }).append(
-      $.map(path_to_segments(key_to_path(this_prefix)), function (segment, i) {
+      $.map(key_to_segments(get_prefix()), function (segment, i) {
         if (i < index) {
           return $("<li>", { text: segment.name });
         } else if (i === index) {
           return $("<li>").append($("<a>", {
-            href: root_uri.clone().path(page_uri.path(true)),
+            href: new root.URI().search("").toString(),
             text: segment.name
           }));
         } else {
           return $("<li>").append($("<a>", {
-            href: root_uri.clone().path(page_uri.path(true)).query({ prefix: path_to_key(segment.path) }).toString(),
+            href: new root.URI().query({ prefix: path_to_key(segment.path) }).toString(),
             text: segment.name
           }));
         }
@@ -236,7 +243,7 @@
 
     if (key.endsWith("/")) {
       glyph = "glyphicon glyphicon-folder-close";
-      href = page_uri.clone().search({ prefix: key }).toString();
+      href = new root.URI().query({ prefix: key }).toString();
     } else {
       glyph = "glyphicon glyphicon-file";
       href = root_uri.clone().pathname(key).toString();
@@ -263,7 +270,7 @@
   };
 
   module.list = function (continuation_token) {
-    list_bucket(root_uri, this_prefix, continuation_token).done(function (result) {
+    list_bucket(root_uri, get_prefix(), continuation_token).done(function (result) {
       $("tbody").append(
         result.contents.filter(function (i, item) {
           unused(i);
