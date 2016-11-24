@@ -192,13 +192,13 @@
   };
 
   var order_by = function (key, order) {
-    if (order === "asc") {
+    if (order === "desc") {
       return function (a, b) {
-        return compare($(a).data(key), $(b).data(key));
+        return compare($(b).data(key), $(a).data(key));
       };
     } else {
       return function (a, b) {
-        return compare($(b).data(key), $(a).data(key));
+        return compare($(a).data(key), $(b).data(key));
       };
     }
   };
@@ -221,24 +221,21 @@
   };
 
   var sort = function (sort_by) {
-    var $th = $("table.dromozoa-s3-browser thead th.sort-by-" + sort_by);
     var $thead = $("table.dromozoa-s3-browser thead");
     var $tbody = $("table.dromozoa-s3-browser tbody");
-    var definitions = sort_definitions[sort_by];
-    var state = $th.data("sort_state");
-    if (state === undefined) {
-      state = 0;
-    } else {
-      state = (state + 1) % definitions.length;
-    }
-    var definition = definitions[state];
+    var $th = $thead.find("th.sort-by-" + sort_by);
 
+    var defs = sort_definitions[sort_by];
+    var state = ($th.data("sort_state") + 1) % defs.length;
+    var def = defs[state];
+
+    $thead.find("th").data("sort_state", -1);
     $thead.find(".glyphicon").attr("class", "glyphicon");
-    $th.find(".glyphicon").addClass(definition.icon);
 
     $th.data("sort_state", state);
+    $th.find(".glyphicon").addClass(def.icon);
 
-    $tbody.append($tbody.children("tr").detach().sort(definition.order));
+    $tbody.append($tbody.children("tr").detach().sort(def.order));
   };
 
   var sort_by = function (sort_by) {
@@ -275,16 +272,19 @@
             .append($("<a>", { href: "#sort-by-name", text: "Name", on: { click: sort_by("name") } }))
             .append($("<span>", { text: " " }))
             .append($("<span>", { "class": "glyphicon" }))
+            .data("sort_state", -1)
           )
           .append($("<th>", { "class": "hidden-xs sort-by-mtime", css: { width: "12em" }})
             .append($("<a>", { href: "#sort-by-mtime", text: "Last Modified", on: { click: sort_by("mtime") } }))
             .append($("<span>", { text: " " }))
             .append($("<span>", { "class": "glyphicon" }))
+            .data("sort_state", -1)
           )
           .append($("<th>", { "class": "sort-by-size", css: { width: "6em" }})
             .append($("<a>", { href: "#sort-by-size", text: "Size", on: { click: sort_by("size") }  }))
             .append($("<span>", { text: " " }))
             .append($("<span>", { "class": "glyphicon" }))
+            .data("sort_state", -1)
           )
         )
       )
