@@ -183,32 +183,24 @@
 
   var create_breadcrumb = function () {
     assert(this_prefix.startsWith(page_prefix));
-    var this_segments = path_to_segments(key_to_path(this_prefix));
-    var page_segments = path_to_segments(key_to_path(page_prefix));
-
-    var $ul = $("<ul>", { "class": "breadcrumb" });
-
-    $.each(this_segments, function (i, seg) {
-      if (i < page_segments.length - 1) {
-        $ul.append($("<li>", { text: seg.name }));
-      } else if (i === page_segments.length - 1) {
-        $ul.append($("<li>")
-          .append($("<a>", {
+    var index = path_to_segments(key_to_path(page_prefix)).length - 1;
+    return $("<ul>", { "class": "breadcrumb" }).append(
+      $.map(path_to_segments(key_to_path(this_prefix)), function (segment, i) {
+        if (i < index) {
+          return $("<li>", { text: segment.name });
+        } else if (i === index) {
+          return $("<li>").append($("<a>", {
             href: root_uri.clone().path(page_uri.path(true)),
-            text: seg.name
-          }))
-        );
-      } else {
-        $ul.append($("<li>")
-          .append($("<a>", {
-            href: root_uri.clone().path(page_uri.path(true)).query({ prefix: path_to_key(seg.path) }).toString(),
-            text: seg.name
-          }))
-        );
-      }
-    });
-
-    return $ul;
+            text: segment.name
+          }));
+        } else {
+          return $("<li>").append($("<a>", {
+            href: root_uri.clone().path(page_uri.path(true)).query({ prefix: path_to_key(segment.path) }).toString(),
+            text: segment.name
+          }));
+        }
+      })
+    );
   };
 
   var create_table = function () {
