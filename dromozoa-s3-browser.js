@@ -200,11 +200,11 @@
         if (i < index) {
           return $("<li>", { text: segment.name });
         } else {
-          var uri
-          if (i == index) {
+          var uri;
+          if (i === index) {
             uri = get_uri();
           } else {
-            uri = get_uri().query({ prefix: path_to_key(segment.path) });
+            uri = get_uri().addQuery("prefix", path_to_key(segment.path));
           }
           return $("<li>")
             .append($("<a>", { href: uri.toString(), text: segment.name }));
@@ -236,13 +236,13 @@
       .append($("<tbody>"));
   };
 
-  var create_table_row = function (item) {
+  var create_tr = function (item) {
     var key = item.key || item.prefix;
     var icon;
     var uri;
     if (key.endsWith("/")) {
       icon = "glyphicon-folder-close";
-      uri = get_uri().query({ prefix: key });
+      uri = get_uri().addQuery("prefix", key);
     } else {
       icon = "glyphicon-file";
       uri = get_origin_uri().path(key_to_path(key));
@@ -266,12 +266,12 @@
           return item.key !== result.prefix;
         }).map(function (i, item) {
           unused(i);
-          return create_table_row(item);
+          return create_tr(item);
         }).toArray()
       ).append(
         result.common_prefixes.map(function (i, item) {
           unused(i);
-          return create_table_row(item);
+          return create_tr(item);
         }).toArray()
       );
       if (result.is_truncated) {
