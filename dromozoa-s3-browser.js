@@ -221,8 +221,8 @@
   };
 
   var sort = function (type) {
-    var $thead = $("table.dromozoa-s3-browser thead");
-    var $tbody = $("table.dromozoa-s3-browser tbody");
+    var $thead = $(".dromozoa-s3-browser thead");
+    var $tbody = $(".dromozoa-s3-browser tbody");
     var $th = $thead.find("th.sort-by-" + type);
 
     var defs = sort_definitions[type];
@@ -265,7 +265,7 @@
   };
 
   var create_table = function () {
-    return $("<table>", { "class": "table table-striped table-condensed dromozoa-s3-browser" })
+    return $("<table>", { "class": "table table-striped table-condensed" })
       .append($("<thead>")
         .append($("<tr>")
           .append($("<th>", { "class": "sort-by-name" })
@@ -330,7 +330,7 @@
   var list;
   list = function (continuation_token) {
     list_bucket(get_origin_uri(), get_prefix(), continuation_token).done(function (result) {
-      $("table.dromozoa-s3-browser tbody")
+      $(".dromozoa-s3-browser tbody")
         .append(result.contents.filter(function (i, item) {
           unused(i);
           return item.key !== result.prefix;
@@ -356,10 +356,12 @@
   if (!root.dromozoa.s3) {
     root.dromozoa.s3 = {};
   }
-  root.dromozoa.s3.browser = function () {
-    list();
-    return $("<div>")
-      .append(create_breadcrumb())
-      .append(create_table());
+  root.dromozoa.s3.browser = {
+    list: function () {
+      list();
+      return $("<div>", { "class": "dromozoa-s3-browser"})
+        .append(create_breadcrumb())
+        .append(create_table());
+    }
   };
 }(this.self));
