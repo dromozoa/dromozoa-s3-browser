@@ -95,11 +95,12 @@
       var units = [ "", " KiB", " MiB", " GiB", " TiB", " PiB", " EiB", "ZiB", "YiB" ];
       var result = value.toFixed(0);
       $.each(units, function (i, unit) {
+        unused(i);
         if (value < 1024) {
           if (value >= 100 || root.Math.abs(value - root.Math.round(value)) < 0.05) {
-            result = value.toFixed(0) + units[i];
+            result = value.toFixed(0) + unit;
           } else {
-            result = value.toFixed(1) + units[i];
+            result = value.toFixed(1) + unit;
           }
           return false;
         }
@@ -155,7 +156,13 @@
     });
   };
 
-  var sort_by = function (name) {
+  // sort_by: type:name, name, mtime, size
+  // type: 1, 2
+  // sort_order: asc, desc
+
+  // sort: { by: [ "type", "name" ], order: "asc" }
+
+  var sort_by = function () {
     return function (ev) {
       ev.preventDefault();
     };
@@ -210,12 +217,18 @@
         .append($("<tr>")
           .append($("<th>")
             .append($("<a>", { href: "#sort-by-name", text: "Name", on: { click: sort_by("name") } }))
+            .append($("<span>", { text: " " }))
+            .append($("<span>", { "class": "glyphicon" }))
           )
           .append($("<th>", { "class": "hidden-xs", css: { width: "12em" }})
             .append($("<a>", { href: "#sort-by-mtime", text: "Last Modified", on: { click: sort_by("mtime") } }))
+            .append($("<span>", { text: " " }))
+            .append($("<span>", { "class": "glyphicon" }))
           )
           .append($("<th>", { css: { width: "6em" }})
             .append($("<a>", { href: "#sort-by-size", text: "Size", on: { click: sort_by("size") }  }))
+            .append($("<span>", { text: " " }))
+            .append($("<span>", { "class": "glyphicon" }))
           )
         )
       )
@@ -229,25 +242,25 @@
 
     var glyph;
     var href;
-    var attr;
+    // var attr;
     var name;
-    var mtime;
-    var size;
+    // var mtime;
+    // var size;
 
     if (key.endsWith("/")) {
       glyph = "glyphicon glyphicon-folder-close";
       href = page_uri.clone().search({ prefix: key }).toString();
-      attr = "0";
+      // attr = "0";
       name = segment[segment.length - 2];
-      mtime = -1;
-      size = -1;
+      // mtime = -1;
+      // size = -1;
     } else {
       glyph = "glyphicon glyphicon-file";
       href = root_uri.clone().pathname(key).toString();
-      attr = "1";
+      // attr = "1";
       name = segment[segment.length - 1];
-      mtime = item.last_modified.getTime();
-      size = item.size;
+      // mtime = item.last_modified.getTime();
+      // size = item.size;
     }
 
     return $("<tr>")
@@ -258,12 +271,7 @@
       )
       .append($("<td>", { "class": "hidden-xs", text: format_date(item.last_modified) }))
       .append($("<td>", { "class": "text-right", text: format_size(item.size) }))
-      .data({
-        attr_name: attr + ":" + name,
-        name: name,
-        mtime: mtime,
-        size: item.size
-      });
+      .data(item);
   };
 
   var module;
