@@ -155,6 +155,12 @@
     });
   };
 
+  var sort_by = function (name) {
+    return function (ev) {
+      ev.preventDefault();
+    };
+  };
+
   var page_uri = new root.URI();
   var page_query = root.URI.parseQuery(page_uri.query());
   var page_prefix = path_to_key(page_uri.directory(true) + "/");
@@ -203,13 +209,13 @@
       .append($("<thead>")
         .append($("<tr>")
           .append($("<th>")
-            .append($("<a>", { text: "Name" }))
+            .append($("<a>", { href: "#sort-by-name", text: "Name", on: { click: sort_by("name") } }))
           )
           .append($("<th>", { "class": "hidden-xs", css: { width: "12em" }})
-            .append($("<a>", { text: "Last Modified" }))
+            .append($("<a>", { href: "#sort-by-mtime", text: "Last Modified", on: { click: sort_by("mtime") } }))
           )
           .append($("<th>", { css: { width: "6em" }})
-            .append($("<a>", { text: "Size" }))
+            .append($("<a>", { href: "#sort-by-size", text: "Size", on: { click: sort_by("size") }  }))
           )
         )
       )
@@ -223,16 +229,25 @@
 
     var glyph;
     var href;
+    var attr;
     var name;
+    var mtime;
+    var size;
 
     if (key.endsWith("/")) {
       glyph = "glyphicon glyphicon-folder-close";
       href = page_uri.clone().search({ prefix: key }).toString();
+      attr = "0";
       name = segment[segment.length - 2];
+      mtime = -1;
+      size = -1;
     } else {
       glyph = "glyphicon glyphicon-file";
       href = root_uri.clone().pathname(key).toString();
+      attr = "1";
       name = segment[segment.length - 1];
+      mtime = item.last_modified.getTime();
+      size = item.size;
     }
 
     return $("<tr>")
@@ -242,7 +257,13 @@
         .append($("<a>", { href: href, text: name }))
       )
       .append($("<td>", { "class": "hidden-xs", text: format_date(item.last_modified) }))
-      .append($("<td>", { "class": "text-right", text: format_size(item.size) }));
+      .append($("<td>", { "class": "text-right", text: format_size(item.size) }))
+      .data({
+        attr_name: attr + ":" + name,
+        name: name,
+        mtime: mtime,
+        size: item.size
+      });
   };
 
   var module;
