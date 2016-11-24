@@ -160,12 +160,19 @@
     });
   };
 
+  var get_uri = function () {
+    return new root.URI().query("").hash("");
+  };
+
+  var get_origin_uri = function () {
+    return get_uri().path("/");
+  };
+
   var get_path_prefix = function () {
     return path_to_key(new root.URI().directory(true) + "/");
   };
 
   var get_prefix = function () {
-    var uri = new root.URI();
     var query = root.URI.parseQuery(new root.URI().query());
     if (query.prefix) {
       return query.prefix;
@@ -186,9 +193,6 @@
     };
   };
 
-  var page_uri = new root.URI();
-  var root_uri = page_uri.clone().path("/").search("");
-
   var create_breadcrumb = function () {
     var index = key_to_segments(get_path_prefix()).length - 1;
     return $("<ul>", { "class": "breadcrumb" }).append(
@@ -197,12 +201,12 @@
           return $("<li>", { text: segment.name });
         } else if (i === index) {
           return $("<li>").append($("<a>", {
-            href: new root.URI().search("").toString(),
+            href: get_uri().toString(),
             text: segment.name
           }));
         } else {
           return $("<li>").append($("<a>", {
-            href: new root.URI().query({ prefix: path_to_key(segment.path) }).toString(),
+            href: get_uri().query({ prefix: path_to_key(segment.path) }).toString(),
             text: segment.name
           }));
         }
@@ -234,61 +238,56 @@
       .append($("<tbody>"));
   };
 
-  var create_tr = function (item) {
+  var create_table_row = function (item) {
     var key = item.key || item.prefix;
-
-    var glyph;
-    var href;
-    var name = basename(key_to_path(key));
-
+    var icon;
+    var uri;
     if (key.endsWith("/")) {
-      glyph = "glyphicon glyphicon-folder-close";
-      href = new root.URI().query({ prefix: key }).toString();
+      icon = "glyphicon-folder-close";
+      uri = get_uri().query({ prefix: key });
     } else {
-      glyph = "glyphicon glyphicon-file";
-      href = root_uri.clone().pathname(key).toString();
+      icon = "glyphicon-file";
+      uri = get_origin_uri().path(key_to_path(key));
     }
-
     return $("<tr>")
       .append($("<td>")
-        .append($("<span>", { "class": glyph }))
+        .append($("<span>", { "class": "glyphicon " + icon }))
         .append($("<span>", { text: " " }))
-        .append($("<a>", { href: href, text: name }))
+        .append($("<a>", { href: uri.toString(), text: basename(key_to_path(key)) }))
       )
       .append($("<td>", { "class": "hidden-xs", text: format_date(item.last_modified) }))
-      .append($("<td>", { "class": "text-right", text: format_size(item.size) }))
-      .data(item);
+      .append($("<td>", { "class": "text-right", text: format_size(item.size) }));
   };
 
-  var module;
-  module = function () {
-    var table = create_table();
-    module.list();
-    return $("<div>")
-      .append(create_breadcrumb())
-      .append(table);
-  };
-
-  module.list = function (continuation_token) {
-    list_bucket(root_uri, get_prefix(), continuation_token).done(function (result) {
+  var list;
+  list = function (continuation_token) {
+    list_bucket(get_origin_uri(), get_prefix(), continuation_token).done(function (result) {
       $("tbody").append(
         result.contents.filter(function (i, item) {
           unused(i);
           return item.key !== result.prefix;
         }).map(function (i, item) {
           unused(i);
-          return create_tr(item);
+          return create_table_row(item);
         }).toArray()
       ).append(
         result.common_prefixes.map(function (i, item) {
           unused(i);
-          return create_tr(item);
+          return create_table_row(item);
         }).toArray()
       );
       if (result.is_truncated) {
-        module.list(result.next_continuation_token);
+        list(result.next_continuation_token);
       }
     });
+  };
+
+  var module = function () {
+    var table = create_table();
+    list();
+    return $("<div>")
+      .append(create_breadcrumb())
+      .append(table);
   };
 
   if (!root.dromozoa) {
