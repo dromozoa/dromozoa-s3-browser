@@ -183,15 +183,15 @@
 
   var create_breadcrumb = function () {
     assert(this_prefix.startsWith(page_prefix));
-    var this_segs = path_to_segments(key_to_path(this_prefix));
-    var page_segs = path_to_segments(key_to_path(page_prefix));
+    var this_segments = path_to_segments(key_to_path(this_prefix));
+    var page_segments = path_to_segments(key_to_path(page_prefix));
 
     var $ul = $("<ul>", { "class": "breadcrumb" });
 
-    $.each(this_segs, function (i, seg) {
-      if (i < page_segs.length - 1) {
+    $.each(this_segments, function (i, seg) {
+      if (i < page_segments.length - 1) {
         $ul.append($("<li>", { text: seg.name }));
-      } else if (i === page_segs.length - 1) {
+      } else if (i === page_segments.length - 1) {
         $ul.append($("<li>")
           .append($("<a>", {
             href: root_uri.clone().path(page_uri.path(true)),
@@ -237,30 +237,17 @@
 
   var create_tr = function (item) {
     var key = item.key || item.prefix;
-    var uri = root_uri.clone().pathname(key_to_path(key));
-    var segment = uri.segmentCoded();
 
     var glyph;
     var href;
-    // var attr;
-    var name;
-    // var mtime;
-    // var size;
+    var name = basename(key_to_path(key));
 
     if (key.endsWith("/")) {
       glyph = "glyphicon glyphicon-folder-close";
       href = page_uri.clone().search({ prefix: key }).toString();
-      // attr = "0";
-      name = segment[segment.length - 2];
-      // mtime = -1;
-      // size = -1;
     } else {
       glyph = "glyphicon glyphicon-file";
       href = root_uri.clone().pathname(key).toString();
-      // attr = "1";
-      name = segment[segment.length - 1];
-      // mtime = item.last_modified.getTime();
-      // size = item.size;
     }
 
     return $("<tr>")
@@ -285,19 +272,20 @@
 
   module.list = function (continuation_token) {
     list_bucket(root_uri, this_prefix, continuation_token).done(function (result) {
-      result.contents.filter(function (i, item) {
-        unused(i);
-        return item.key !== result.prefix;
-      }).each(function (i, item) {
-        unused(i);
-        $("tbody").append(create_tr(item));
-      });
-
-      result.common_prefixes.each(function (i, item) {
-        unused(i);
-        $("tbody").append(create_tr(item));
-      });
-
+      $("tbody").append(
+        result.contents.filter(function (i, item) {
+          unused(i);
+          return item.key !== result.prefix;
+        }).map(function (i, item) {
+          unused(i);
+          return create_tr(item);
+        }).toArray()
+      ).append(
+        result.common_prefixes.map(function (i, item) {
+          unused(i);
+          return create_tr(item);
+        }).toArray()
+      );
       if (result.is_truncated) {
         module.list(result.next_continuation_token);
       }
