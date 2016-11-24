@@ -181,16 +181,75 @@
     }
   };
 
-  // sort_by: type:name, name, mtime, size
+  // sort_by: type, name, mtime, size
   // type: 1, 2
   // sort_order: asc, desc
 
   // sort: { by: [ "type", "name" ], order: "asc" }
 
-  var sort_by = function () {
-    return function (ev) {
-      ev.preventDefault();
-    };
+  var compare = function (a, b) {
+    if (a < b) {
+      return -1;
+    } else if (a == b) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
+
+  var comparator = function (key, order) {
+    if (order == "asc") {
+      return function (a, b) {
+        return compare($(a).data(key), $(b).data(key));
+      };
+    } else {
+      return function (a, b) {
+        return compare($(b).data(key), $(a).data(key));
+      };
+    }
+  };
+
+  var sort_definitions = {
+    name: [
+      { compare: comparator("type", "asc"), icon: "glyphicon-sort-by-attributes" },
+      { compare: comparator("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" },
+      { compare: comparator("name", "asc"), icon: "glyphicon-sort-by-alphabet" },
+      { compare: comparator("name", "desc"), icon: "glyphicon-sort-by-alphabet-alt" }
+    ],
+    mtime: [
+      { compare: comparator("mtime", "asc"), icon: "glyphicon-sort-by-attributes" },
+      { compare: comparator("mtime", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
+    ],
+    size: [
+      { compare: comparator("type", "asc"), icon: "glyphicon-sort-by-attributes" },
+      { compare: comparator("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
+    ]
+  };
+
+  var sort = function (sort_by) {
+    var $th = $("table.dromozoa-s3-browser thead th.sort-by-" + sort_by);
+    var $thead = $("table.dromozoa-s3-browser thead");
+    var $tbody = $("table.dromozoa-s3-browser tbody");
+    var definitions = sort_definitions[sort_by];
+    var state = $th.data("sort_state");
+    if (state === undefined) {
+      state = 0;
+    } else {
+      state = (state + 1) % definitions.length;
+    }
+    var definition = definitions[state];
+
+    $thead.find(".glyphicon").attr("class", "glyphicon");
+    $th.find(".glyphicon").addClass(definition.icon);
+
+    $th.data("sort_state", state);
+
+    $tbody.append($tbody.children("tr").detach().sort(definition.compare));
+  }
+
+  var sorter = function (ev) {
+    ev.preventDefault();
+    sort($(this).closest("th").data("sort_by"));
   };
 
   var create_breadcrumb = function () {
@@ -213,23 +272,26 @@
   };
 
   var create_table = function () {
-    return $("<table>", { "class": "table table-striped table-condensed" })
+    return $("<table>", { "class": "table table-striped table-condensed dromozoa-s3-browser" })
       .append($("<thead>")
         .append($("<tr>")
-          .append($("<th>")
-            .append($("<a>", { href: "#sort-by-name", text: "Name", on: { click: sort_by("name") } }))
+          .append($("<th>", { "class": "sort-by-name" })
+            .append($("<a>", { href: "#sort-by-name", text: "Name", on: { click: sorter } }))
             .append($("<span>", { text: " " }))
             .append($("<span>", { "class": "glyphicon" }))
+            .data({ sort_by: "name" })
           )
-          .append($("<th>", { "class": "hidden-xs", css: { width: "12em" }})
-            .append($("<a>", { href: "#sort-by-mtime", text: "Last Modified", on: { click: sort_by("mtime") } }))
+          .append($("<th>", { "class": "hidden-xs sort-by-mtime", css: { width: "12em" }})
+            .append($("<a>", { href: "#sort-by-mtime", text: "Last Modified", on: { click: sorter } }))
             .append($("<span>", { text: " " }))
             .append($("<span>", { "class": "glyphicon" }))
+            .data({ sort_by: "mtime" })
           )
-          .append($("<th>", { css: { width: "6em" }})
-            .append($("<a>", { href: "#sort-by-size", text: "Size", on: { click: sort_by("size") }  }))
+          .append($("<th>", { "class": "sort-by-size", css: { width: "6em" }})
+            .append($("<a>", { href: "#sort-by-size", text: "Size", on: { click: sorter }  }))
             .append($("<span>", { text: " " }))
             .append($("<span>", { "class": "glyphicon" }))
+            .data({ sort_by: "size" })
           )
         )
       )
@@ -238,54 +300,55 @@
 
   var create_tr = function (item) {
     var key = item.key || item.prefix;
+    var name = basename(key_to_path(key));
     var icon;
     var uri;
+    var data = { name: name };
     if (key.endsWith("/")) {
       icon = "glyphicon-folder-close";
       uri = get_uri().addQuery("prefix", key);
+      data.type = "0:" + name;
+      data.mtime = -1;
+      data.size = -1;
     } else {
       icon = "glyphicon-file";
       uri = get_origin_uri().path(key_to_path(key));
+      data.type = "1:" + name;
+      data.mtime = item.last_modified.getTime();
+      data.size = item.size;
     }
     return $("<tr>")
       .append($("<td>")
         .append($("<span>", { "class": "glyphicon " + icon }))
         .append($("<span>", { text: " " }))
-        .append($("<a>", { href: uri.toString(), text: basename(key_to_path(key)) }))
+        .append($("<a>", { href: uri.toString(), text: name }))
       )
       .append($("<td>", { "class": "hidden-xs", text: format_date(item.last_modified) }))
-      .append($("<td>", { "class": "text-right", text: format_size(item.size) }));
+      .append($("<td>", { "class": "text-right", text: format_size(item.size) }))
+      .data(data);
   };
 
   var list;
   list = function (continuation_token) {
     list_bucket(get_origin_uri(), get_prefix(), continuation_token).done(function (result) {
-      $("tbody").append(
-        result.contents.filter(function (i, item) {
+      $("table.dromozoa-s3-browser tbody")
+        .append(result.contents.filter(function (i, item) {
           unused(i);
           return item.key !== result.prefix;
         }).map(function (i, item) {
           unused(i);
           return create_tr(item);
-        }).toArray()
-      ).append(
-        result.common_prefixes.map(function (i, item) {
+        }).toArray())
+        .append(result.common_prefixes.map(function (i, item) {
           unused(i);
           return create_tr(item);
-        }).toArray()
-      );
+        }).toArray());
       if (result.is_truncated) {
         list(result.next_continuation_token);
+      } else {
+        sort("name");
       }
     });
-  };
-
-  var module = function () {
-    var table = create_table();
-    list();
-    return $("<div>")
-      .append(create_breadcrumb())
-      .append(table);
   };
 
   if (!root.dromozoa) {
@@ -294,5 +357,10 @@
   if (!root.dromozoa.s3) {
     root.dromozoa.s3 = {};
   }
-  root.dromozoa.s3.browser = module;
+  root.dromozoa.s3.browser = function () {
+    list();
+    return $("<div>")
+      .append(create_breadcrumb())
+      .append(create_table());
+  };
 }(this.self));
