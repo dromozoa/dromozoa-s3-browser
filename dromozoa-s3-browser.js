@@ -195,23 +195,21 @@
 
   var create_breadcrumb = function () {
     var index = key_to_segments(get_path_prefix()).length - 1;
-    return $("<ul>", { "class": "breadcrumb" }).append(
-      $.map(key_to_segments(get_prefix()), function (segment, i) {
+    return $("<ul>", { "class": "breadcrumb" })
+      .append($.map(key_to_segments(get_prefix()), function (segment, i) {
         if (i < index) {
           return $("<li>", { text: segment.name });
-        } else if (i === index) {
-          return $("<li>").append($("<a>", {
-            href: get_uri().toString(),
-            text: segment.name
-          }));
         } else {
-          return $("<li>").append($("<a>", {
-            href: get_uri().query({ prefix: path_to_key(segment.path) }).toString(),
-            text: segment.name
-          }));
+          var uri
+          if (i == index) {
+            uri = get_uri();
+          } else {
+            uri = get_uri().query({ prefix: path_to_key(segment.path) });
+          }
+          return $("<li>")
+            .append($("<a>", { href: uri.toString(), text: segment.name }));
         }
-      })
-    );
+      }));
   };
 
   var create_table = function () {
