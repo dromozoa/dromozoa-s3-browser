@@ -232,8 +232,8 @@
       { order: order_by("mtime", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
     ],
     size: [
-      { order: order_by("type", "asc"), icon: "glyphicon-sort-by-attributes" },
-      { order: order_by("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
+      { order: order_by("size", "asc"), icon: "glyphicon-sort-by-attributes" },
+      { order: order_by("size", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
     ]
   };
 
