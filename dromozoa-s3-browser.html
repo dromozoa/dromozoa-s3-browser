@@ -9,9 +9,6 @@
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css">
   </head>
   <body>
-    <div class="container">
-      <h1>Index</h1>
-    </div>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
@@ -20,7 +17,7 @@
     <script src="//localhost/dromozoa-s3-browser/dromozoa-s3-browser.js"></script>
     <script>
       $(function () {
-        $(".container").append(dromozoa.s3.browser.list());
+        $("body").append(dromozoa.s3.browser());
       });
     </script>
   </body>

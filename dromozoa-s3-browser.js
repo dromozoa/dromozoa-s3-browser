@@ -262,6 +262,30 @@
     };
   };
 
+  var create_navbar = function () {
+    return $("<nav>", { "class": "navbar navbar-default navbar-static-top" })
+      .append($("<div>", { "class": "container" })
+        .append($("<div>", { "class": "navbar-header" })
+          .append($("<button>", { type: "button", "class": "navbar-toggle collapsed", "data-toggle": "collapse", "data-target": "#dromozoa-s3-browser-navbar" })
+            .append($("<span>", { "class": "sr-only" }))
+            .append($("<span>", { "class": "icon-bar" }))
+            .append($("<span>", { "class": "icon-bar" }))
+            .append($("<span>", { "class": "icon-bar" }))
+          )
+        )
+        .append($("<div>", { id: "dromozoa-s3-browser-navbar", "class": "navbar-collapse collapse" })
+          .append($("<ul>", { "class": "nav navbar-nav" })
+            .append($("<li>", { "class": "active" })
+              .append($("<a>", { href: "#list", text: "List" }))
+            )
+            .append($("<li>")
+              .append($("<a>", { href: "#thumbnail", text: "Thumbnail" }))
+            )
+          )
+        )
+      );
+  };
+
   var create_breadcrumb = function () {
     var index = key_to_segments(get_path_prefix()).length - 1;
     return $("<ul>", { "class": "breadcrumb" })
@@ -373,12 +397,13 @@
   if (!root.dromozoa.s3) {
     root.dromozoa.s3 = {};
   }
-  root.dromozoa.s3.browser = {
-    list: function () {
-      list();
-      return $("<div>", { "class": "dromozoa-s3-browser"})
+  root.dromozoa.s3.browser = function () {
+    list();
+    return $("<div>", { "class": "dromozoa-s3-browser" })
+      .append(create_navbar())
+      .append($("<div>", { "class": "container"})
         .append(create_breadcrumb())
-        .append(create_table());
-    }
+        .append(create_table())
+      );
   };
 }(this.self));
