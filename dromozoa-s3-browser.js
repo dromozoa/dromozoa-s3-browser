@@ -198,6 +198,15 @@
     }
   };
 
+  var get_mode = function (fallback) {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.mode) {
+      return query.mode;
+    } else {
+      return fallback;
+    }
+  };
+
   var compare = function (a, b) {
     if (a < b) {
       return -1;
@@ -238,8 +247,8 @@
   };
 
   var sort = function (type) {
-    var $thead = $(".dromozoa-s3-browser thead");
-    var $tbody = $(".dromozoa-s3-browser tbody");
+    var $thead = $(".dromozoa-s3-browser-list thead");
+    var $tbody = $(".dromozoa-s3-browser-list tbody");
     var $th = $thead.find("th.sort-by-" + type);
 
     var defs = sort_definitions[type];
@@ -262,7 +271,7 @@
     };
   };
 
-  var create_navbar = function () {
+  var create_navbar = function (mode) {
     return $("<nav>", { "class": "navbar navbar-default navbar-static-top" })
       .append($("<div>", { "class": "container" })
         .append($("<div>", { "class": "navbar-header" })
@@ -275,11 +284,11 @@
         )
         .append($("<div>", { id: "dromozoa-s3-browser-navbar", "class": "navbar-collapse collapse" })
           .append($("<ul>", { "class": "nav navbar-nav" })
-            .append($("<li>", { "class": "active" })
-              .append($("<a>", { href: "#list", text: "List" }))
+            .append($("<li>", { "class": mode === "list" ? "active" : undefined})
+              .append($("<a>", { href: get_uri().toString(), text: "List" }))
             )
-            .append($("<li>")
-              .append($("<a>", { href: "#tree", text: "Tree" }))
+            .append($("<li>", { "class": mode === "tree" ? "active" : undefined})
+              .append($("<a>", { href: get_uri().addQuery("mode", "tree").toString(), text: "Tree" }))
             )
           )
         )
@@ -371,7 +380,7 @@
   var list;
   list = function (continuation_token) {
     list_bucket(get_origin_uri(), get_prefix(), continuation_token).done(function (result) {
-      $(".dromozoa-s3-browser tbody")
+      $(".dromozoa-s3-browser-list tbody")
         .append(result.contents.filter(function (i, item) {
           unused(i);
           return item.key !== result.prefix;
@@ -400,12 +409,22 @@
     root.dromozoa.s3 = {};
   }
   root.dromozoa.s3.browser = function () {
-    list();
-    return $("<div>", { "class": "dromozoa-s3-browser" })
-      .append(create_navbar())
-      .append($("<div>", { "class": "container"})
-        .append(create_breadcrumb())
-        .append(create_table())
-      );
+    var mode = get_mode("list");
+    if (mode === "list") {
+      list();
+      return $("<div>", { "class": "dromozoa-s3-browser" })
+        .append(create_navbar(mode))
+        .append($("<div>", { "class": "dromozoa-s3-browser-list" })
+          .append($("<div>", { "class": "container"})
+            .append(create_breadcrumb())
+            .append(create_table())
+          )
+        );
+    } else if (mode === "tree") {
+      return $("<div>", { "class": "dromozoa-s3-browser" })
+        .append(create_navbar(mode));
+    } else {
+      error("invalid mode");
+    }
   };
 }(this.self));
