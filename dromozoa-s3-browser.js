@@ -272,7 +272,7 @@
   };
 
   var create_navbar = function (mode) {
-    return $("<nav>", { "class": "navbar navbar-default navbar-static-top" })
+    return $("<nav>", { "class": "navbar navbar-default navbar-fixed-top" })
       .append($("<div>", { "class": "container" })
         .append($("<div>", { "class": "navbar-header" })
           .append($("<button>", { type: "button", "class": "navbar-toggle collapsed", "data-toggle": "collapse", "data-target": "#dromozoa-s3-browser-navbar" })
@@ -402,29 +402,59 @@
     });
   };
 
+  var update = function () {
+  };
+
+  var resize = function () {
+    $(".dromozoa-s3-browser-tree").css({
+      width: root.innerWidth + "px",
+      height: (root.innerHeight - 50) + "px"
+    });
+  };
+
+  var module = function () {
+    var mode = module[get_mode("list")];
+    if (mode) {
+      return mode();
+    } else {
+      error("invalid mode");
+    }
+  };
+
+  module.list = function () {
+    list();
+    return $("<div>", { "class": "dromozoa-s3-browser" })
+      .append(create_navbar("list"))
+      .append($("<div>", { "class": "dromozoa-s3-browser-list" })
+        .css({ "margin-top": "70px" })
+        .append($("<div>", { "class": "container"})
+          .append(create_breadcrumb())
+          .append(create_table())
+        )
+      );
+  };
+
+  module.tree = function () {
+    $(root).on("resize", function () {
+      resize();
+    });
+    return $("<div>", { "class": "dromozoa-s3-browser" })
+      .append(create_navbar("tree"))
+      .append($("<svg>", { "class": "dromozoa-s3-browser-tree" })
+        .css({
+          display: "block",
+          "margin-top": "50px",
+          width: root.innerWidth + "px",
+          height: (root.innerHeight - 50) + "px"
+        })
+      );
+  };
+
   if (!root.dromozoa) {
     root.dromozoa = {};
   }
   if (!root.dromozoa.s3) {
     root.dromozoa.s3 = {};
   }
-  root.dromozoa.s3.browser = function () {
-    var mode = get_mode("list");
-    if (mode === "list") {
-      list();
-      return $("<div>", { "class": "dromozoa-s3-browser" })
-        .append(create_navbar(mode))
-        .append($("<div>", { "class": "dromozoa-s3-browser-list" })
-          .append($("<div>", { "class": "container"})
-            .append(create_breadcrumb())
-            .append(create_table())
-          )
-        );
-    } else if (mode === "tree") {
-      return $("<div>", { "class": "dromozoa-s3-browser" })
-        .append(create_navbar(mode));
-    } else {
-      error("invalid mode");
-    }
-  };
+  root.dromozoa.s3.browser = module;
 }(this.self));
