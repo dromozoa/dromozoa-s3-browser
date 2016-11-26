@@ -279,7 +279,7 @@
               .append($("<a>", { href: "#list", text: "List" }))
             )
             .append($("<li>")
-              .append($("<a>", { href: "#thumbnail", text: "Thumbnail" }))
+              .append($("<a>", { href: "#tree", text: "Tree" }))
             )
           )
         )
@@ -388,6 +388,8 @@
       } else {
         sort("name");
       }
+    }).fail(function () {
+      error("could not list bucket");
     });
   };
 
