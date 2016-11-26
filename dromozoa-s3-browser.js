@@ -198,6 +198,15 @@
     }
   };
 
+  var get_mode = function (fallback) {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.mode) {
+      return query.mode;
+    } else {
+      return fallback;
+    }
+  };
+
   var compare = function (a, b) {
     if (a < b) {
       return -1;
@@ -232,14 +241,14 @@
       { order: order_by("mtime", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
     ],
     size: [
-      { order: order_by("type", "asc"), icon: "glyphicon-sort-by-attributes" },
-      { order: order_by("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
+      { order: order_by("size", "asc"), icon: "glyphicon-sort-by-attributes" },
+      { order: order_by("size", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
     ]
   };
 
   var sort = function (type) {
-    var $thead = $(".dromozoa-s3-browser thead");
-    var $tbody = $(".dromozoa-s3-browser tbody");
+    var $thead = $(".dromozoa-s3-browser-list thead");
+    var $tbody = $(".dromozoa-s3-browser-list tbody");
     var $th = $thead.find("th.sort-by-" + type);
 
     var defs = sort_definitions[type];
@@ -260,6 +269,30 @@
       ev.preventDefault();
       sort(type);
     };
+  };
+
+  var create_navbar = function (mode) {
+    return $("<nav>", { "class": "navbar navbar-default navbar-fixed-top" })
+      .append($("<div>", { "class": "container" })
+        .append($("<div>", { "class": "navbar-header" })
+          .append($("<button>", { type: "button", "class": "navbar-toggle collapsed", "data-toggle": "collapse", "data-target": "#dromozoa-s3-browser-navbar" })
+            .append($("<span>", { "class": "sr-only" }))
+            .append($("<span>", { "class": "icon-bar" }))
+            .append($("<span>", { "class": "icon-bar" }))
+            .append($("<span>", { "class": "icon-bar" }))
+          )
+        )
+        .append($("<div>", { id: "dromozoa-s3-browser-navbar", "class": "navbar-collapse collapse" })
+          .append($("<ul>", { "class": "nav navbar-nav" })
+            .append($("<li>", { "class": mode === "list" ? "active" : undefined})
+              .append($("<a>", { href: get_uri().toString(), text: "List" }))
+            )
+            .append($("<li>", { "class": mode === "tree" ? "active" : undefined})
+              .append($("<a>", { href: get_uri().addQuery("mode", "tree").toString(), text: "Tree" }))
+            )
+          )
+        )
+      );
   };
 
   var create_breadcrumb = function () {
@@ -347,7 +380,7 @@
   var list;
   list = function (continuation_token) {
     list_bucket(get_origin_uri(), get_prefix(), continuation_token).done(function (result) {
-      $(".dromozoa-s3-browser tbody")
+      $(".dromozoa-s3-browser-list tbody")
         .append(result.contents.filter(function (i, item) {
           unused(i);
           return item.key !== result.prefix;
@@ -364,7 +397,54 @@
       } else {
         sort("name");
       }
+    }).fail(function () {
+      error("could not list bucket");
     });
+  };
+
+  var resize = function () {
+    $(".dromozoa-s3-browser-tree").css({
+      width: root.innerWidth + "px",
+      height: (root.innerHeight - 50) + "px"
+    });
+  };
+
+  var module;
+  module = function () {
+    var mode = module[get_mode("list")];
+    if (mode) {
+      return mode();
+    }
+    error("invalid mode");
+  };
+
+  module.list = function () {
+    list();
+    return $("<div>", { "class": "dromozoa-s3-browser" })
+      .append(create_navbar("list"))
+      .append($("<div>", { "class": "dromozoa-s3-browser-list" })
+        .css({ "margin-top": "70px" })
+        .append($("<div>", { "class": "container"})
+          .append(create_breadcrumb())
+          .append(create_table())
+        )
+      );
+  };
+
+  module.tree = function () {
+    $(root).on("resize", function () {
+      resize();
+    });
+    return $("<div>", { "class": "dromozoa-s3-browser" })
+      .append(create_navbar("tree"))
+      .append($("<svg>", { "class": "dromozoa-s3-browser-tree" })
+        .css({
+          display: "block",
+          "margin-top": "50px",
+          width: root.innerWidth + "px",
+          height: (root.innerHeight - 50) + "px"
+        })
+      );
   };
 
   if (!root.dromozoa) {
@@ -373,12 +453,5 @@
   if (!root.dromozoa.s3) {
     root.dromozoa.s3 = {};
   }
-  root.dromozoa.s3.browser = {
-    list: function () {
-      list();
-      return $("<div>", { "class": "dromozoa-s3-browser"})
-        .append(create_breadcrumb())
-        .append(create_table());
-    }
-  };
+  root.dromozoa.s3.browser = module;
 }(this.self));
