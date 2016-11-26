@@ -402,9 +402,6 @@
     });
   };
 
-  var update = function () {
-  };
-
   var resize = function () {
     $(".dromozoa-s3-browser-tree").css({
       width: root.innerWidth + "px",
@@ -412,13 +409,13 @@
     });
   };
 
-  var module = function () {
+  var module;
+  module = function () {
     var mode = module[get_mode("list")];
     if (mode) {
       return mode();
-    } else {
-      error("invalid mode");
     }
+    error("invalid mode");
   };
 
   module.list = function () {
