@@ -198,16 +198,23 @@
     }
   };
 
-  var get_mode = function (fallback) {
+  var get_mode = function () {
     var query = root.URI.parseQuery(new root.URI().query());
     if (query.mode) {
       return query.mode;
     } else {
-      return fallback;
+      return "list";
     }
   };
 
-  var create_navbar = function (mode) {
+  var create_navbar = function () {
+    var $list_li = $("<li>");
+    var $tree_li = $("<li>");
+    if (get_mode() === "list") {
+      $list_li.addClass("active");
+    } else {
+      $tree_li.addClass("active");
+    }
     return $("<nav>", { "class": "navbar navbar-default navbar-fixed-top" })
       .append($("<div>", { "class": "container" })
         .append($("<div>", { "class": "navbar-header" })
@@ -220,10 +227,10 @@
         )
         .append($("<div>", { id: "dromozoa-s3-browser-navbar", "class": "navbar-collapse collapse" })
           .append($("<ul>", { "class": "nav navbar-nav" })
-            .append($("<li>", { "class": mode === "list" ? "active" : undefined})
+            .append($list_li
               .append($("<a>", { href: get_uri().toString(), text: "List" }))
             )
-            .append($("<li>", { "class": mode === "tree" ? "active" : undefined})
+            .append($tree_li
               .append($("<a>", { href: get_uri().addQuery("mode", "tree").toString(), text: "Tree" }))
             )
           )
@@ -233,7 +240,7 @@
 
   var module;
   module = function () {
-    var impl = module[get_mode("list")];
+    var impl = module[get_mode()];
     if (impl) {
       return impl();
     }
@@ -414,7 +421,7 @@
 
     list();
     return $("<div>", { "class": "dromozoa-s3-browser" })
-      .append(create_navbar("list"))
+      .append(create_navbar())
       .append($("<div>", { "class": "dromozoa-s3-browser-list" })
         .css({ "margin-top": "70px" })
         .append($("<div>", { "class": "container"})
@@ -437,7 +444,7 @@
     });
 
     return $("<div>", { "class": "dromozoa-s3-browser" })
-      .append(create_navbar("tree"))
+      .append(create_navbar())
       .append($("<svg>", { "class": "dromozoa-s3-browser-tree" })
         .css({
           display: "block",
