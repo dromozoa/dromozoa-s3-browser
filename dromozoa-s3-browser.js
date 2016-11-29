@@ -36,6 +36,10 @@
     error("assertion failed!");
   };
 
+  var push = function (a, b) {
+    root.Array.prototype.push.apply(a, b);
+  };
+
   var compare = function (a, b) {
     if (a < b) {
       return -1;
@@ -199,8 +203,8 @@
 
     var done;
     done = function (result) {
-      root.Array.prototype.push.apply(contents, result.contents);
-      root.Array.prototype.push.apply(common_prefixes, result.common_prefixes);
+      push(contents, result.contents);
+      push(common_prefixes, result.common_prefixes);
       if (result.is_truncated) {
         list_bucket_impl(uri, prefix, result.next_continuation_token).done(done).fail(fail);
       } else {
@@ -467,8 +471,8 @@
     load = function (prefix) {
       list_bucket(get_origin_uri(), prefix).done(function (result) {
         var data = [];
-        root.Array.prototype.push.apply(data, result.contents);
-        root.Array.prototype.push.apply(data, result.common_prefixes);
+        push(data, result.contents);
+        push(data, result.common_prefixes);
         data.sort(function (a, b) {
           return compare(a.key || a.prefix, b.key || b.prefx);
         });
