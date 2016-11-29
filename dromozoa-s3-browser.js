@@ -20,6 +20,7 @@
   "use strict";
   var $ = root.jQuery;
   var unused = $.noop;
+  var d3 = root.d3;
 
   var error = function (message) {
     if (root.bootbox) {
@@ -394,8 +395,8 @@
         .data(data);
     };
 
-    var list;
-    list = function (continuation_token) {
+    var load;
+    load = function (continuation_token) {
       list_bucket(get_origin_uri(), get_prefix(), continuation_token).done(function (result) {
         $(".dromozoa-s3-browser-list tbody")
           .append(result.contents.filter(function (i, item) {
@@ -410,16 +411,16 @@
             return create_tr(item);
           }).toArray());
         if (result.is_truncated) {
-          list(result.next_continuation_token);
+          load(result.next_continuation_token);
         } else {
           sort("name");
         }
       }).fail(function () {
-        error("could not list bucket");
+        error("could not load");
       });
     };
 
-    list();
+    load();
     return $("<div>", { "class": "dromozoa-s3-browser" })
       .append(create_navbar())
       .append($("<div>", { "class": "dromozoa-s3-browser-list" })
@@ -432,6 +433,26 @@
   };
 
   module.tree = function () {
+    var layout = d3.tree();
+    // var root;
+
+    var update = function () {
+      unused(layout);
+    };
+
+    var load;
+    load = function (prefix, continuation_token) {
+      list_bucket(get_origin_uri(), prefix, continuation_token).done(function (result) {
+        if (result.is_truncated) {
+          load(result.next_continuation_token);
+        } else {
+          update();
+        }
+      }).fail(function () {
+        error("could not load");
+      });
+    };
+
     var resize = function () {
       $(".dromozoa-s3-browser-tree").css({
         width: root.innerWidth + "px",
@@ -441,6 +462,10 @@
 
     $(root).on("resize", function () {
       resize();
+    });
+
+    $(function () {
+      load(get_prefix());
     });
 
     return $("<div>", { "class": "dromozoa-s3-browser" })
