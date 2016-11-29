@@ -36,6 +36,16 @@
     error("assertion failed!");
   };
 
+  var compare = function (a, b) {
+    if (a < b) {
+      return -1;
+    } else if (a === b) {
+      return 0;
+    } else {
+      return 1;
+    }
+  };
+
   var basename = function (path) {
     var result = /([^\/]+)\/*$/.exec(path);
     if (result) {
@@ -132,12 +142,12 @@
     }
   };
 
-  var list_bucket = function (uri, prefix, continuation_token) {
+  var list_bucket_impl = function (uri, prefix, continuation_token) {
     return $.ajax(uri.toString(), {
       cache: false,
       dataType: "xml",
       data: {
-        "max-keys": 1000,
+        "max-keys": 2,
         delimiter: "/",
         prefix: prefix,
         "list-type": 2,
@@ -162,20 +172,50 @@
             size: root.parseInt($elem.children("Size").text()),
             storage_class: $elem.children("StorageClass").text()
           };
-        }),
+        }).toArray(),
         common_prefixes: $root.children("CommonPrefixes").map(function (i, elem) {
           unused(i);
           var $elem = $(elem);
           return {
             prefix: $elem.children("Prefix").text()
           };
-        })
+        }).toArray()
       };
       if (result.is_truncated) {
         result.next_continuation_token = $root.children("NextContinuationToken").text();
       }
-      return new $.Deferred().resolve(result).promise();
+      return result;
     });
+  };
+
+  var list_bucket = function (uri, prefix) {
+    var $deferred = new $.Deferred();
+    var contents = [];
+    var common_prefixes = [];
+
+    var fail = function () {
+      $deferred.reject();
+    };
+
+    var done;
+    done = function (result) {
+      root.Array.prototype.push.apply(contents, result.contents);
+      root.Array.prototype.push.apply(common_prefixes, result.common_prefixes);
+      if (result.is_truncated) {
+        list_bucket_impl(uri, prefix, result.next_continuation_token).done(done).fail(fail);
+      } else {
+        $deferred.resolve({
+          name: result.name,
+          prefix: result.prefix,
+          delimiter: result.delimiter,
+          contents: contents,
+          common_prefixes: common_prefixes
+        });
+      }
+    };
+
+    list_bucket_impl(uri, prefix).done(done).fail(fail);
+    return $deferred.promise();
   };
 
   var get_uri = function () {
@@ -249,16 +289,6 @@
   };
 
   module.list = function () {
-    var compare = function (a, b) {
-      if (a < b) {
-        return -1;
-      } else if (a === b) {
-        return 0;
-      } else {
-        return 1;
-      }
-    };
-
     var order_by = function (key, order) {
       if (order === "desc") {
         return function (a, b) {
@@ -396,25 +426,18 @@
     };
 
     var load;
-    load = function (continuation_token) {
-      list_bucket(get_origin_uri(), get_prefix(), continuation_token).done(function (result) {
+    load = function () {
+      list_bucket(get_origin_uri(), get_prefix()).done(function (result) {
         $(".dromozoa-s3-browser-list tbody")
-          .append(result.contents.filter(function (i, item) {
-            unused(i);
+          .append($.map($.grep(result.contents, function (item) {
             return item.key !== result.prefix;
-          }).map(function (i, item) {
-            unused(i);
+          }), function (item) {
             return create_tr(item);
-          }).toArray())
-          .append(result.common_prefixes.map(function (i, item) {
-            unused(i);
+          }))
+          .append($.map(result.common_prefixes, function (item) {
             return create_tr(item);
-          }).toArray());
-        if (result.is_truncated) {
-          load(result.next_continuation_token);
-        } else {
-          sort("name");
-        }
+          }));
+        sort("name");
       }).fail(function () {
         error("could not load");
       });
@@ -434,20 +457,23 @@
 
   module.tree = function () {
     var layout = d3.tree();
-    // var root;
+    var dataset = {};
 
     var update = function () {
       unused(layout);
     };
 
     var load;
-    load = function (prefix, continuation_token) {
-      list_bucket(get_origin_uri(), prefix, continuation_token).done(function (result) {
-        if (result.is_truncated) {
-          load(result.next_continuation_token);
-        } else {
-          update();
-        }
+    load = function (prefix) {
+      list_bucket(get_origin_uri(), prefix).done(function (result) {
+        var data = [];
+        root.Array.prototype.push.apply(data, result.contents);
+        root.Array.prototype.push.apply(data, result.common_prefixes);
+        data.sort(function (a, b) {
+          return compare(a.key || a.prefix, b.key || b.prefx);
+        });
+        dataset[result.prefix] = data;
+        update();
       }).fail(function () {
         error("could not load");
       });
