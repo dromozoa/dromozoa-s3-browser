@@ -176,6 +176,8 @@
             size: root.parseInt($elem.children("Size").text()),
             storage_class: $elem.children("StorageClass").text()
           };
+        }).filter(function (i, item) {
+          return item.key !== prefix;
         }).toArray(),
         common_prefixes: $root.children("CommonPrefixes").map(function (i, elem) {
           unused(i);
@@ -433,9 +435,7 @@
     load = function () {
       list_bucket(get_origin_uri(), get_prefix()).done(function (result) {
         $(".dromozoa-s3-browser-list tbody")
-          .append($.map($.grep(result.contents, function (item) {
-            return item.key !== result.prefix;
-          }), function (item) {
+          .append($.map(result.contents, function (item) {
             return create_tr(item);
           }))
           .append($.map(result.common_prefixes, function (item) {
@@ -471,9 +471,7 @@
     load = function (prefix) {
       list_bucket(get_origin_uri(), prefix).done(function (result) {
         var items = [];
-        push(items, $.grep(result.contents, function (item) {
-          return item.key !== result.prefix;
-        }));
+        push(items, result.contents);
         push(items, result.common_prefixes);
         items.sort(function (a, b) {
           return compare(a.key || a.prefix, b.key || b.prefx);
