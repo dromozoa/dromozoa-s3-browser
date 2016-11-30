@@ -461,7 +461,7 @@
 
   module.tree = function () {
     var layout = d3.tree();
-    var dataset = {};
+    var itemset = {};
 
     var update = function () {
       unused(layout);
@@ -470,13 +470,15 @@
     var load;
     load = function (prefix) {
       list_bucket(get_origin_uri(), prefix).done(function (result) {
-        var data = [];
-        push(data, result.contents);
-        push(data, result.common_prefixes);
-        data.sort(function (a, b) {
+        var items = [];
+        push(items, $.grep(result.contents, function (item) {
+          return item.key !== result.prefix;
+        }));
+        push(items, result.common_prefixes);
+        items.sort(function (a, b) {
           return compare(a.key || a.prefix, b.key || b.prefx);
         });
-        dataset[result.prefix] = data;
+        itemset[result.prefix] = items;
         update();
       }).fail(function () {
         error("could not load");
