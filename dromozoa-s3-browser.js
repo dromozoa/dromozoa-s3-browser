@@ -501,20 +501,19 @@
       tree.size([ 256, 256]);
       tree(root_node);
 
-      var node = root_group.selectAll(".node")
+      root_group.selectAll(".node")
         .data(root_node.descendants())
         .enter()
-          .append("g")
+        .append("g")
           .attr("class", "node")
           .attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
-          });
-
-      node.append("circle")
-        .attr("cx", 0)
-        .attr("cy", 0)
-        .attr("r", 4)
-        .attr("fill", "black");
+          })
+          .append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 4)
+            .attr("fill", "black");
     };
 
     var load;
