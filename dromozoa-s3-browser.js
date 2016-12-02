@@ -22,10 +22,10 @@
   var unused = $.noop;
   var d3 = root.d3;
 
-  var Tuple2 = function (x, y) {
+  function Tuple2(x, y) {
     this.x = x;
     this.y = y;
-  };
+  }
 
   Tuple2.prototype.absolute = function () {
     this.x = root.Math.abs(this.x);
@@ -66,10 +66,10 @@
     return "[" + this.x + "," + this.y + "]";
   };
 
-  var Vector2 = function (x, y) {
+  function Vector2(x, y) {
     this.x = x;
     this.y = y;
-  };
+  }
 
   Vector2.prototype = $.extend(Vector2.prototype, Tuple2.prototype);
 
@@ -95,11 +95,11 @@
     return this.scale(1 / this.length());
   };
 
-  var Matrix3 = function (m00, m01, m02, m10, m11, m12, m20, m21, m22) {
+  function Matrix3(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
     this.m00 = m00; this.m01 = m01; this.m02 = m02;
     this.m10 = m10; this.m11 = m11; this.m12 = m12;
     this.m20 = m20; this.m21 = m21; this.m22 = m22;
-  };
+  }
 
   Matrix3.prototype.determinant = function () {
     var m00 = this.m00; var m01 = this.m01; var m02 = this.m02;
@@ -226,25 +226,25 @@
       + "],[" + this.m20 + "," + this.m21 + "," + this.m22 + "]]";
   };
 
-  var error = function (message) {
+  function error(message) {
     if (root.bootbox) {
       root.bootbox.alert(message);
     }
     throw new root.Error(message);
-  };
+  }
 
-  var assert = function (result) {
+  function assert(result) {
     if (result) {
       return result;
     }
     error("assertion failed!");
-  };
+  }
 
-  var push = function (a, b) {
+  function push(a, b) {
     root.Array.prototype.push.apply(a, b);
-  };
+  }
 
-  var compare = function (a, b) {
+  function compare(a, b) {
     if (a < b) {
       return -1;
     } else if (a === b) {
@@ -252,9 +252,9 @@
     } else {
       return 1;
     }
-  };
+  }
 
-  var basename = function (path) {
+  function basename(path) {
     var result = /([^\/]+)\/*$/.exec(path);
     if (result) {
       return result[1];
@@ -265,9 +265,9 @@
     } else {
       return ".";
     }
-  };
+  }
 
-  var dirname = function (path) {
+  function dirname(path) {
     var result = /^(.*[^\/])\/+[^\/]+\/*/.exec(path);
     if (result) {
       return result[1];
@@ -278,14 +278,14 @@
     } else {
       return ".";
     }
-  };
+  }
 
-  var path_to_key = function (path) {
+  function path_to_key(path) {
     assert(path.startsWith("/"));
     return path.substring(1);
-  };
+  }
 
-  var path_to_segments = function (path) {
+  function path_to_segments(path) {
     var result = [];
     while (path !== "/") {
       result.unshift({
@@ -300,26 +300,26 @@
       path += "/";
     }
     return result;
-  };
+  }
 
-  var key_to_path = function (key) {
+  function key_to_path(key) {
     assert(!key.startsWith("/"));
     return "/" + key;
-  };
+  }
 
-  var key_to_segments = function (key) {
+  function key_to_segments(key) {
     return path_to_segments(key_to_path(key));
-  };
+  }
 
-  var format_int = function (fill, width, value) {
+  function format_int(fill, width, value) {
     var result = value.toString();
     while (result.length < width) {
       result = fill + result;
     }
     return result;
-  };
+  }
 
-  var format_date = function (value) {
+  function format_date(value) {
     if (value) {
       return format_int("0", 4, value.getFullYear())
         + "-" + format_int("0", 2, value.getMonth() + 1)
@@ -328,9 +328,9 @@
         + ":" + format_int("0", 2, value.getMinutes())
         + ":" + format_int("0", 2, value.getSeconds());
     }
-  };
+  }
 
-  var format_size = function (value) {
+  function format_size(value) {
     if (value) {
       var units = [ "", " KiB", " MiB", " GiB", " TiB", " PiB", " EiB", "ZiB", "YiB" ];
       var result = value.toFixed(0);
@@ -348,9 +348,9 @@
       });
       return result;
     }
-  };
+  }
 
-  var list_bucket_impl = function (uri, prefix, continuation_token) {
+  function list_bucket_impl(uri, prefix, continuation_token) {
     return $.ajax(uri.toString(), {
       cache: false,
       dataType: "xml",
@@ -399,9 +399,9 @@
       }
       return result;
     });
-  };
+  }
 
-  var list_bucket = function (uri, prefix) {
+  function list_bucket(uri, prefix) {
     var $deferred = new $.Deferred();
     var contents = [];
     var common_prefixes = [];
@@ -433,39 +433,39 @@
 
     list_bucket_impl(uri, prefix).done(done).fail(fail);
     return $deferred.promise();
-  };
+  }
 
-  var get_uri = function () {
+  function get_uri() {
     return new root.URI().query("").hash("");
-  };
+  }
 
-  var get_origin_uri = function () {
+  function get_origin_uri() {
     return get_uri().path("/");
-  };
+  }
 
-  var get_path_prefix = function () {
+  function get_path_prefix() {
     return path_to_key(new root.URI().directory(true) + "/");
-  };
+  }
 
-  var get_prefix = function () {
+  function get_prefix() {
     var query = root.URI.parseQuery(new root.URI().query());
     if (query.prefix) {
       return query.prefix;
     } else {
       return get_path_prefix();
     }
-  };
+  }
 
-  var get_mode = function () {
+  function get_mode() {
     var query = root.URI.parseQuery(new root.URI().query());
     if (query.mode) {
       return query.mode;
     } else {
       return "list";
     }
-  };
+  }
 
-  var create_navbar = function () {
+  function create_navbar() {
     var $list_li = $("<li>");
     var $tree_li = $("<li>");
     if (get_mode() === "list") {
@@ -494,16 +494,15 @@
           )
         )
       );
-  };
+  }
 
-  var module;
-  module = function (selector) {
+  function module(selector) {
     var impl = module[get_mode()];
     if (impl) {
       return impl(selector);
     }
     error("invalid mode");
-  };
+  }
 
   module.list = function (selector) {
     var order_by = function (key, order) {
@@ -675,7 +674,7 @@
     var identifiers = {};
     var identifier_count = 0;
 
-    var key_to_identifier = function (key) {
+    function key_to_identifier(key) {
       var identifier = identifiers[key];
       if (identifier) {
         return identifier;
@@ -685,10 +684,9 @@
       identifiers[key] = identifier;
       identifier_count = count;
       return identifier;
-    };
+    }
 
-    var stratify;
-    stratify = function (key) {
+    function stratify(key) {
       var name = basename(key_to_path(key));
       if (key.endsWith("/")) {
         if (itemset[key]) {
@@ -713,9 +711,9 @@
           name: name
         };
       }
-    };
+    }
 
-    var update = function () {
+    function update() {
       var svg = d3.select(".dromozoa-s3-browser-tree");
       var width = root.parseInt(svg.attr("width"), 10);
       var height = root.parseInt(svg.attr("height"), 10);
@@ -742,10 +740,9 @@
             .attr("cy", 0)
             .attr("r", 4)
             .attr("fill", "black");
-    };
+    }
 
-    var load;
-    load = function (prefix) {
+    function load(prefix) {
       list_bucket(get_origin_uri(), prefix).done(function (result) {
         itemset[result.prefix] = result.items.sort(function (a, b) {
           return compare(a.key, b.key);
@@ -754,13 +751,13 @@
       }).fail(function () {
         error("could not load");
       });
-    };
+    }
 
-    var resize = function () {
+    function resize() {
       d3.select(".dromozoa-s3-browser-tree")
         .attr("width", root.innerWidth)
         .attr("height", root.innerHeight - 50);
-    };
+    }
 
     $(root).on("resize", function () {
       resize();
