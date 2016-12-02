@@ -228,19 +228,18 @@
   };
 
   function error(message) {
-    if (root.alert) {
-      root.alert(message);
-    }
-    if (root.Error) {
-      throw new root.Error(message);
-    }
+    root.alert(message);
+    throw new root.Error(message);
   }
 
-  function assert(result) {
+  function assert(result, message) {
     if (result) {
       return result;
     }
-    error("assertion failed!");
+    if (!message) {
+      message = "assertion failed!";
+    }
+    error(message);
   }
 
   function push(a, b) {
