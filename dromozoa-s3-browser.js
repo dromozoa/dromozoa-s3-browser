@@ -505,14 +505,21 @@
   }
 
   function module(selector) {
+    if (!selector) {
+      selector = "body";
+    }
+    $(selector)
+      .append("<div>")
+        .addClass("dromozoa-s3-browser")
+        .append(create_navbar())
     var impl = module[get_mode()];
     if (impl) {
-      return impl(selector);
+      return impl();
     }
     error("invalid mode");
   }
 
-  module.list = function (selector) {
+  module.list = function () {
     function order_by(key, order) {
       if (order === "desc") {
         return function (a, b) {
@@ -685,21 +692,18 @@
       });
     }
 
-    $(selector)
-      .append("<div>")
-        .addClass("dromozoa-s3-browser")
-        .append(create_navbar())
+    $(".dromozoa-s3-browser")
+      .append($("<div>")
+        .addClass("dromozoa-s3-browser-list")
+        .css("margin-top", "70px")
         .append($("<div>")
-          .addClass("dromozoa-s3-browser-list")
-          .css("margin-top", "70px")
-          .append($("<div>")
-            .addClass("container")
-            .append(create_breadcrumb())
-            .append(create_table())));
+          .addClass("container")
+          .append(create_breadcrumb())
+          .append(create_table())));
     load();
   };
 
-  module.tree = function (selector) {
+  module.tree = function () {
     var tree = d3.tree();
     var itemset = {};
     var identifiers = {};
@@ -799,10 +803,6 @@
       load(get_prefix());
     });
 
-    $(selector)
-      .append("<div>")
-        .addClass("dromozoa-s3-browser")
-        .append(create_navbar());
     d3.select(".dromozoa-s3-browser")
       .append("svg")
         .attr("class", "dromozoa-s3-browser-tree")
