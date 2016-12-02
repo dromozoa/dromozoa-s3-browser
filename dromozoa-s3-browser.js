@@ -670,6 +670,7 @@
   };
 
   module.tree = function (selector) {
+    var tree = d3.tree();
     var itemset = {};
 
     var stratify;
@@ -698,11 +699,14 @@
     };
 
     var update = function () {
+      var svg = d3.select(".dromozoa-s3-browser-tree");
+      var width = root.parseInt(svg.attr("width"), 10);
+      var height = root.parseInt(svg.attr("height"), 10);
+
       var root_group = d3.select(".dromozoa-s3-browser-tree > g");
       var root_node = d3.hierarchy(stratify(get_prefix()));
 
-      var tree = d3.tree();
-      tree.size([ 256, 256]);
+      tree.size([ width - 50, height - 50 ]);
       tree(root_node);
 
       root_group.selectAll(".node")
@@ -740,6 +744,7 @@
 
     $(root).on("resize", function () {
       resize();
+      update();
     });
 
     $(function () {
