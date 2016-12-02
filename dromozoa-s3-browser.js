@@ -405,32 +405,33 @@
 
   function list_bucket(uri, prefix) {
     var $deferred = new $.Deferred();
-    var contents = [];
-    var common_prefixes = [];
 
     function fail() {
       $deferred.reject();
     }
 
     function done(result) {
-      push(contents, result.contents);
-      push(common_prefixes, result.common_prefixes);
+      push(done.contents, result.contents);
+      push(done.common_prefixes, result.common_prefixes);
       if (result.is_truncated) {
         list_bucket_impl(uri, prefix, result.next_continuation_token).done(done).fail(fail);
       } else {
         var items = [];
-        push(items, contents);
-        push(items, common_prefixes);
+        push(items, done.contents);
+        push(items, done.common_prefixes);
         $deferred.resolve({
           name: result.name,
           prefix: result.prefix,
           delimiter: result.delimiter,
-          contents: contents,
-          common_prefixes: common_prefixes,
+          contents: done.contents,
+          common_prefixes: done.common_prefixes,
           items: items
         });
       }
     }
+
+    done.contents = [];
+    done.common_prefixes = [];
 
     list_bucket_impl(uri, prefix).done(done).fail(fail);
     return $deferred.promise();
@@ -524,7 +525,24 @@
       }
     }
 
-    var sort_definitions = {
+    function sort(type) {
+      var defs = sort.definitions[type];
+      var $th = $(".dromozoa-s3-browser-list .sort-by-" + type);
+      var state = ($th.data("sort_state") + 1) % defs.length;
+      var def = defs[state];
+
+      var $thead = $(".dromozoa-s3-browser-list thead");
+      $thead.find("th").data("sort_state", -1);
+      $thead.find(".glyphicon").attr("class", "glyphicon");
+
+      $th.data("sort_state", state);
+      $th.find(".glyphicon").addClass(def.icon);
+
+      var $tbody = $(".dromozoa-s3-browser-list tbody");
+      $tbody.append($tbody.children("tr").detach().sort(def.order));
+    }
+
+    sort.definitions = {
       name: [
         { order: order_by("type", "asc"), icon: "glyphicon-sort-by-attributes" },
         { order: order_by("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" },
@@ -541,24 +559,6 @@
       ]
     };
 
-    function sort(type) {
-      var $thead = $(".dromozoa-s3-browser-list thead");
-      var $tbody = $(".dromozoa-s3-browser-list tbody");
-      var $th = $thead.find("th.sort-by-" + type);
-
-      var defs = sort_definitions[type];
-      var state = ($th.data("sort_state") + 1) % defs.length;
-      var def = defs[state];
-
-      $thead.find("th").data("sort_state", -1);
-      $thead.find(".glyphicon").attr("class", "glyphicon");
-
-      $th.data("sort_state", state);
-      $th.find(".glyphicon").addClass(def.icon);
-
-      $tbody.append($tbody.children("tr").detach().sort(def.order));
-    }
-
     function sort_by(type) {
       return function (ev) {
         ev.preventDefault();
@@ -568,19 +568,21 @@
 
     function create_breadcrumb() {
       var index = key_to_segments(get_path_prefix()).length - 1;
-      return $("<ul>", { "class": "breadcrumb" })
+      return $("<ul>")
+        .addClass("breadcrumb")
         .append($.map(key_to_segments(get_prefix()), function (segment, i) {
           if (i < index) {
-            return $("<li>", { text: segment.name });
+            return $("<li>")
+              .text(segment.name);
           } else {
-            var uri;
-            if (i === index) {
-              uri = get_uri();
-            } else {
-              uri = get_uri().addQuery("prefix", path_to_key(segment.path));
+            var uri = get_uri();
+            if (i !== index) {
+              uri.addQuery("prefix", path_to_key(segment.path));
             }
             return $("<li>")
-              .append($("<a>", { href: uri.toString(), text: segment.name }));
+              .append($("<a>")
+                .attr("href", uri.toString())
+                .text(segment.name));
           }
         }));
     }
