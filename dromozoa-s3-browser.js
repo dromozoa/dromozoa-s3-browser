@@ -706,20 +706,21 @@
   module.tree = function () {
     var tree = d3.tree();
     var itemset = {};
-    var identifiers = {};
-    var identifier_count = 0;
 
     function key_to_identifier(key) {
-      var identifier = identifiers[key];
+      var identifier = key_to_identifier.map[key];
       if (identifier) {
         return identifier;
       }
-      var count = identifier_count + 1;
+      var count = key_to_identifier.count + 1;
       identifier = "dromozoa-s3-browser-tree-" + count;
-      identifiers[key] = identifier;
-      identifier_count = count;
+      key_to_identifier.map[key] = identifier;
+      key_to_identifier.count = count;
       return identifier;
     }
+
+    key_to_identifier.map = {};
+    key_to_identifier.count = 0;
 
     function stratify(key) {
       var name = basename(key_to_path(key));
