@@ -511,7 +511,7 @@
     $(selector)
       .append("<div>")
         .addClass("dromozoa-s3-browser")
-        .append(create_navbar())
+        .append(create_navbar());
     var impl = module[get_mode()];
     if (impl) {
       return impl();
@@ -705,6 +705,7 @@
 
   module.tree = function () {
     var tree = d3.tree();
+    var root_item = { key: get_prefix() };
     var itemset = {};
 
     function key_to_identifier(key) {
@@ -722,31 +723,8 @@
     key_to_identifier.map = {};
     key_to_identifier.count = 0;
 
-    function stratify(key) {
-      var name = basename(key_to_path(key));
-      if (key.endsWith("/")) {
-        if (itemset[key]) {
-          var children = [];
-          $.each(itemset[key], function (i, item) {
-            unused(i);
-            children.push(stratify(item.key));
-          });
-          return {
-            id: key_to_identifier(key),
-            name: name,
-            children: children
-          };
-        }
-        return {
-          id: key_to_identifier(key),
-          name: name
-        };
-      } else {
-        return {
-          id: key_to_identifier(key),
-          name: name
-        };
-      }
+    function children(d) {
+      return itemset[d.key];
     }
 
     function update() {
@@ -755,7 +733,7 @@
       var height = root.parseInt(svg.attr("height"), 10);
 
       var root_group = d3.select(".dromozoa-s3-browser-tree > g");
-      var root_node = d3.hierarchy(stratify(get_prefix()));
+      var root_node = d3.hierarchy(root_item, children);
 
       tree.size([ width - 50, height - 50 ]);
       tree(root_node);
