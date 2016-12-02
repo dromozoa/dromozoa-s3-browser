@@ -672,6 +672,20 @@
   module.tree = function (selector) {
     var tree = d3.tree();
     var itemset = {};
+    var identifiers = {};
+    var identifier_count = 0;
+
+    var key_to_identifier = function (key) {
+      var identifier = identifiers[key];
+      if (identifier) {
+        return identifier;
+      }
+      var count = identifier_count + 1;
+      identifier = "dromozoa-s3-browser-tree-" + count;
+      identifiers[key] = identifier;
+      identifier_count = count;
+      return identifier;
+    };
 
     var stratify;
     stratify = function (key) {
@@ -684,15 +698,18 @@
             children.push(stratify(item.key));
           });
           return {
+            id: key_to_identifier(key),
             name: name,
             children: children
           };
         }
         return {
+          id: key_to_identifier(key),
           name: name
         };
       } else {
         return {
+          id: key_to_identifier(key),
           name: name
         };
       }
@@ -713,6 +730,9 @@
         .data(root_node.descendants())
         .enter()
         .append("g")
+          .attr("id", function (d) {
+            return d.data.id;
+          })
           .attr("class", "node")
           .attr("transform", function (d) {
             return "translate(" + d.x + "," + d.y + ")";
