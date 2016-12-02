@@ -227,10 +227,12 @@
   };
 
   function error(message) {
-    if (root.bootbox) {
-      root.bootbox.alert(message);
+    if (root.alert) {
+      root.alert(message);
     }
-    throw new root.Error(message);
+    if (root.Error) {
+      throw new root.Error(message);
+    }
   }
 
   function assert(result) {
@@ -406,12 +408,11 @@
     var contents = [];
     var common_prefixes = [];
 
-    var fail = function () {
+    function fail() {
       $deferred.reject();
-    };
+    }
 
-    var done;
-    done = function (result) {
+    function done(result) {
       push(contents, result.contents);
       push(common_prefixes, result.common_prefixes);
       if (result.is_truncated) {
@@ -429,7 +430,7 @@
           items: items
         });
       }
-    };
+    }
 
     list_bucket_impl(uri, prefix).done(done).fail(fail);
     return $deferred.promise();
