@@ -18,6 +18,7 @@
 /*jslint this, white*/
 (function (root) {
   "use strict";
+  var Math = root.Math;
   var $ = root.jQuery;
   var unused = $.noop;
   var d3 = root.d3;
@@ -28,8 +29,8 @@
   }
 
   Tuple2.prototype.absolute = function () {
-    this.x = root.Math.abs(this.x);
-    this.x = root.Math.abs(this.x);
+    this.x = Math.abs(this.x);
+    this.x = Math.abs(this.x);
     return this;
   };
 
@@ -80,7 +81,7 @@
   };
 
   Vector2.prototype.length = function () {
-    return root.Math.sqrt(this.length_squared());
+    return Math.sqrt(this.length_squared());
   };
 
   Vector2.prototype.dot = function (that) {
@@ -88,7 +89,7 @@
   };
 
   Vector2.prototype.angle = function (that) {
-    return root.Math.abs(root.Math.atan2(this.x * that.y - this.y * that.x, this.dot(that)));
+    return Math.abs(Math.atan2(this.x * that.y - this.y * that.x, this.dot(that)));
   };
 
   Vector2.prototype.normalize = function () {
@@ -171,8 +172,8 @@
   };
 
   Matrix3.prototype.rot_x = function (angle) {
-    var c = root.Math.cos(angle);
-    var s = root.Math.sin(angle);
+    var c = Math.cos(angle);
+    var s = Math.sin(angle);
     this.m00 = 1; this.m01 = 0; this.m02 =  0;
     this.m10 = 0; this.m11 = c; this.m12 = -s;
     this.m20 = 0; this.m21 = s; this.m22 =  c;
@@ -180,8 +181,8 @@
   };
 
   Matrix3.prototype.rot_y = function (angle) {
-    var c = root.Math.cos(angle);
-    var s = root.Math.sin(angle);
+    var c = Math.cos(angle);
+    var s = Math.sin(angle);
     this.m00 =  c; this.m01 = 0; this.m02 = s;
     this.m10 =  0; this.m11 = 1; this.m12 = 0;
     this.m20 = -s; this.m21 = 0; this.m22 = c;
@@ -189,8 +190,8 @@
   };
 
   Matrix3.prototype.rot_z = function (angle) {
-    var c = root.Math.cos(angle);
-    var s = root.Math.sin(angle);
+    var c = Math.cos(angle);
+    var s = Math.sin(angle);
     this.m00 = c; this.m01 = -s; this.m02 = 0;
     this.m10 = s; this.m11 =  c; this.m12 = 0;
     this.m20 = 0; this.m21 =  0; this.m22 = 1;
@@ -339,7 +340,7 @@
       $.each(units, function (i, unit) {
         unused(i);
         if (value < 1024) {
-          if (value >= 100 || root.Math.abs(value - root.Math.round(value)) < 0.05) {
+          if (value >= 100 || Math.abs(value - Math.round(value)) < 0.05) {
             result = value.toFixed(0) + unit;
           } else {
             result = value.toFixed(1) + unit;
