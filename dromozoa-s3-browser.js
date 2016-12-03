@@ -783,15 +783,19 @@
               .append("text")
               .attr("y", 70)
               .attr("text-anchor", "middle")
-              .text(basename(key_to_path(d.data.key)))
-              .each(function () {
-                console.log(this.getBBox());
-              });
+              .text(basename(key_to_path(d.data.key)));
           });
 
-      nodes.exit().remove();
+      nodes.exit().attr("class", "removing");
 
       var transition = d3.transition().duration(500);
+
+      svg.selectAll(".removing")
+        .attr("opacity", 1)
+        .transition(transition)
+        .attr("opacity", 0)
+        .remove();
+
       svg.selectAll(".node")
         .transition(transition)
         .attr("transform", function (d) {
