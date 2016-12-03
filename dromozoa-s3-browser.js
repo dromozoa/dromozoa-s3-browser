@@ -664,7 +664,7 @@
       return $("<tr>")
         .append($("<td>")
           .append($("<span>")
-            .addClass("class", "glyphicon " + icon))
+            .addClass("glyphicon " + icon))
           .append($("<span>")
             .text(" "))
           .append($("<a>")
@@ -745,6 +745,7 @@
       });
 
       tree.size([ height, width ]);
+      tree.nodeSize([ 200, 400 ]);
       tree(tree_root);
 
       var nodes = svg.select(".model")
@@ -756,11 +757,17 @@
       nodes.enter()
         .append("g")
           .attr("class", "node")
+          .attr("transform", function (d) {
+            var ancestors = d.ancestors();
+            if (ancestors[1]) {
+              return "translate(" + ancestors[1].y + "," + ancestors[1].x + ")";
+            }
+          })
           .each(function (d) {
             var group = d3.select(this);
             group
               .append("circle")
-                .attr("r", 10)
+                .attr("r", 50)
                 .on("click", function (d) {
                   var key = d.data.key;
                   if (key.endsWith("/")) {
@@ -774,13 +781,19 @@
                 });
             group
               .append("text")
-              .attr("y", -10)
-              .text(basename(key_to_path(d.data.key)));
+              .attr("y", 70)
+              .attr("text-anchor", "middle")
+              .text(basename(key_to_path(d.data.key)))
+              .each(function () {
+                console.log(this.getBBox());
+              });
           });
 
       nodes.exit().remove();
 
+      var transition = d3.transition().duration(500);
       svg.selectAll(".node")
+        .transition(transition)
         .attr("transform", function (d) {
           return "translate(" + d.y + "," + d.x + ")";
         });
