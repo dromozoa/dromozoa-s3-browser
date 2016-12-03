@@ -19,6 +19,7 @@
 (function (root) {
   "use strict";
   var Math = root.Math;
+  var abs = Math.abs;
 
   function Tuple2(x, y) {
     this.x = x;
@@ -26,8 +27,8 @@
   }
 
   Tuple2.prototype.absolute = function () {
-    this.x = Math.abs(this.x);
-    this.x = Math.abs(this.x);
+    this.x = abs(this.x);
+    this.y = abs(this.y);
     return this;
   };
 
@@ -54,6 +55,10 @@
     this.x = this.x * beta + that.x * alpha;
     this.y = this.y * beta + that.y * alpha;
     return this;
+  };
+
+  Tuple2.prototype.equals = function (that) {
+    return this.x === that.x && this.y === that.y;
   };
 
   Tuple2.prototype.clone = function () {
@@ -90,6 +95,10 @@
 
   Vector2.prototype.normalize = function () {
     return this.scale(1 / this.length());
+  };
+
+  Vector2.prototype.clone = function () {
+    return new Vector2(this.x, this.y);
   };
 
   function Matrix3(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
@@ -208,6 +217,12 @@
       result.y = this.m10 * x + this.m11 * y + this.m12;
     }
     return result;
+  };
+
+  Matrix3.prototype.equals = function (that) {
+    return this.m00 === that.m00 && this.m01 === that.m01 && this.m02 === that.m02
+      && this.m10 === that.m10 && this.m11 === that.m11 && this.m12 === that.m12
+      && this.m20 === that.m20 && this.m21 === that.m21 && this.m22 === that.m22;
   };
 
   Matrix3.prototype.clone = function () {
