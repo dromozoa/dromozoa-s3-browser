@@ -744,7 +744,7 @@
         return data[d.key];
       });
 
-      tree.size([ width, height ]);
+      tree.size([ height, width ]);
       tree(tree_root);
 
       var nodes = svg.select(".model")
@@ -782,7 +782,7 @@
 
       svg.selectAll(".node")
         .attr("transform", function (d) {
-          return "translate(" + d.x + "," + d.y + ")";
+          return "translate(" + d.y + "," + d.x + ")";
         });
     };
 
