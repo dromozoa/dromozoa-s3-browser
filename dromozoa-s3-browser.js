@@ -357,7 +357,6 @@
       cache: false,
       dataType: "xml",
       data: {
-        "max-keys": 2,
         delimiter: "/",
         prefix: prefix,
         "list-type": 2,
@@ -705,8 +704,8 @@
 
   module.tree = function () {
     var tree = d3.tree();
-    var root_item = { key: get_prefix() };
-    var itemset = {};
+    var data = {};
+    var svg;
 
     function key_to_identifier(key) {
       var identifier = key_to_identifier.map[key];
@@ -723,54 +722,79 @@
     key_to_identifier.map = {};
     key_to_identifier.count = 0;
 
-    function children(d) {
-      return itemset[d.key];
-    }
+    var load;
+    var update;
 
-    function update() {
-      var svg = d3.select(".dromozoa-s3-browser-tree");
-      var width = root.parseInt(svg.attr("width"), 10);
-      var height = root.parseInt(svg.attr("height"), 10);
-
-      var root_group = d3.select(".dromozoa-s3-browser-tree > g");
-      var root_node = d3.hierarchy(root_item, children);
-
-      tree.size([ width - 50, height - 50 ]);
-      tree(root_node);
-
-      root_group.selectAll(".node")
-        .data(root_node.descendants())
-        .enter()
-        .append("g")
-          .attr("id", function (d) {
-            return d.data.id;
-          })
-          .attr("class", "node")
-          .attr("transform", function (d) {
-            return "translate(" + d.x + "," + d.y + ")";
-          })
-          .append("circle")
-            .attr("cx", 0)
-            .attr("cy", 0)
-            .attr("r", 4)
-            .attr("fill", "black");
-    }
-
-    function load(prefix) {
+    load = function (prefix) {
       list_bucket(get_origin_uri(), prefix).done(function (result) {
-        itemset[result.prefix] = result.items.sort(function (a, b) {
+        data[result.prefix] = result.items.sort(function (a, b) {
           return compare(a.key, b.key);
         });
         update();
       }).fail(function () {
         error("could not load");
       });
-    }
+    };
+
+    update = function () {
+      var width = root.parseInt(svg.attr("width"), 10);
+      var height = root.parseInt(svg.attr("height"), 10);
+
+      var tree_root = d3.hierarchy({ key: get_prefix() }, function (d) {
+        return data[d.key];
+      });
+
+      tree.size([ width, height ]);
+      tree(tree_root);
+
+      var nodes = svg.select(".model")
+        .selectAll(".node")
+        .data(tree_root.descendants(), function (d) {
+          return d.data.key;
+        });
+
+      nodes.enter()
+        .append("g")
+          .attr("class", "node")
+          .each(function (d) {
+            var group = d3.select(this);
+            group
+              .append("circle")
+                .attr("r", 10)
+                .on("click", function (d) {
+                  var key = d.data.key;
+                  if (key.endsWith("/")) {
+                    if (data[key]) {
+                      data[key] = undefined;
+                      update();
+                    } else {
+                      load(key);
+                    }
+                  }
+                });
+            group
+              .append("text")
+              .attr("y", -10)
+              .text(basename(key_to_path(d.data.key)));
+          });
+
+      nodes.exit().remove();
+
+      svg.selectAll(".node")
+        .attr("transform", function (d) {
+          return "translate(" + d.x + "," + d.y + ")";
+        });
+    };
 
     function resize() {
-      d3.select(".dromozoa-s3-browser-tree")
-        .attr("width", root.innerWidth)
-        .attr("height", root.innerHeight - 50);
+      var width = root.innerWidth;
+      var height = root.innerHeight - 50;
+      svg
+        .attr("width", width)
+        .attr("height", height);
+      svg.select(".viewport > rect")
+        .attr("width", width)
+        .attr("height", height);
     }
 
     $(root).on("resize", function () {
@@ -782,12 +806,27 @@
       load(get_prefix());
     });
 
-    d3.select(".dromozoa-s3-browser")
+    svg = d3.select(".dromozoa-s3-browser")
       .append("svg")
         .attr("class", "dromozoa-s3-browser-tree")
         .style("display", "block")
-        .style("margin-top", "50px")
-        .append("g");
+        .style("margin-top", "50px");
+
+    svg
+      .append("g")
+        .attr("class", "viewport")
+        .call(d3.zoom().on("zoom", function () {
+          svg.select(".view").attr("transform", d3.event.transform.toString());
+        }))
+        .append("rect")
+          .attr("fill", "white");
+
+    svg.select(".viewport")
+      .append("g")
+        .attr("class", "view")
+        .append("g")
+          .attr("class", "model");
+
     resize();
   };
 
