@@ -539,10 +539,10 @@
 
       var $thead = $(".dromozoa-s3-browser-list thead");
       $thead.find("th").data("sort_state", -1);
-      $thead.find(".glyphicon").attr("class", "glyphicon");
+      $thead.find(".fa").attr("class", "fa");
 
       $th.data("sort_state", state);
-      $th.find(".glyphicon").addClass(def.icon);
+      $th.find(".fa").addClass(def.icon);
 
       var $tbody = $(".dromozoa-s3-browser-list tbody");
       $tbody.append($tbody.children("tr").detach().sort(def.order));
@@ -550,18 +550,18 @@
 
     sort.definitions = {
       name: [
-        { order: order_by("type", "asc"), icon: "glyphicon-sort-by-attributes" },
-        { order: order_by("type", "desc"), icon: "glyphicon-sort-by-attributes-alt" },
-        { order: order_by("name", "asc"), icon: "glyphicon-sort-by-alphabet" },
-        { order: order_by("name", "desc"), icon: "glyphicon-sort-by-alphabet-alt" }
+        { order: order_by("type", "asc"), icon: "fa-sort-amount-asc" },
+        { order: order_by("type", "desc"), icon: "fa-sort-amount-desc" },
+        { order: order_by("name", "asc"), icon: "fa-sort-alpha-asc" },
+        { order: order_by("name", "desc"), icon: "fa-sort-alpha-desc" }
       ],
       mtime: [
-        { order: order_by("mtime", "asc"), icon: "glyphicon-sort-by-attributes" },
-        { order: order_by("mtime", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
+        { order: order_by("mtime", "asc"), icon: "fa-sort-numeric-asc" },
+        { order: order_by("mtime", "desc"), icon: "fa-sort-numeric-desc" }
       ],
       size: [
-        { order: order_by("size", "asc"), icon: "glyphicon-sort-by-attributes" },
-        { order: order_by("size", "desc"), icon: "glyphicon-sort-by-attributes-alt" }
+        { order: order_by("size", "asc"), icon: "fa-sort-numeric-asc" },
+        { order: order_by("size", "desc"), icon: "fa-sort-numeric-desc" }
       ]
     };
 
@@ -607,7 +607,7 @@
               .append($("<span>")
                 .text(" "))
               .append($("<span>")
-                .addClass("glyphicon"))
+                .addClass("fa"))
               .data("sort_state", -1))
             .append($("<th>")
               .addClass("hidden-xs sort-by-mtime")
@@ -619,7 +619,7 @@
               .append($("<span>")
                 .text(" "))
               .append($("<span>")
-                .addClass("glyphicon"))
+                .addClass("fa"))
               .data("sort_state", -1))
             .append($("<th>")
               .addClass("sort-by-size")
@@ -631,7 +631,7 @@
               .append($("<span>")
                 .text(" "))
               .append($("<span>")
-                .addClass("glyphicon"))
+                .addClass("fa"))
               .data("sort_state", -1))))
         .append($("<tbody>"));
     }
@@ -643,18 +643,18 @@
       var uri;
       var data = { name: name };
       if (key.endsWith("/")) {
-        icon = "glyphicon-folder-close";
+        icon = "fa-folder-o";
         uri = get_uri().addQuery("prefix", key);
         data.type = "0:" + name;
         data.mtime = -1;
         data.size = -1;
       } else {
         if (/\.(?:gif|jpeg|jpg|jpe|png)$/i.exec(key)) {
-          icon = "glyphicon-picture";
+          icon = "fa-file-image-o";
         } else if (/\.(?:mp4|mp4v|mpg4)$/i.exec(key)) {
-          icon = "glyphicon-film";
+          icon = "fa-file-video-o";
         } else {
-          icon = "glyphicon-file";
+          icon = "fa-file-o";
         }
         uri = get_origin_uri().path(key_to_path(key));
         data.type = "1:" + name;
@@ -664,7 +664,7 @@
       return $("<tr>")
         .append($("<td>")
           .append($("<span>")
-            .addClass("glyphicon " + icon))
+            .addClass("fa " + icon))
           .append($("<span>")
             .text(" "))
           .append($("<a>")
