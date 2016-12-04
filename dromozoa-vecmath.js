@@ -177,6 +177,18 @@
       && this.m20 === that.m20 && this.m21 === that.m21 && this.m22 === that.m22;
   };
 
+  Matrix3.prototype.epsilon_equals = function (that, epsilon) {
+    return Math.abs(this.m00 - that.m00) <= epsilon
+      && Math.abs(this.m01 - that.m01) <= epsilon
+      && Math.abs(this.m02 - that.m02) <= epsilon
+      && Math.abs(this.m10 - that.m10) <= epsilon
+      && Math.abs(this.m11 - that.m11) <= epsilon
+      && Math.abs(this.m12 - that.m12) <= epsilon
+      && Math.abs(this.m20 - that.m20) <= epsilon
+      && Math.abs(this.m21 - that.m21) <= epsilon
+      && Math.abs(this.m22 - that.m22) <= epsilon;
+  };
+
   Matrix3.prototype.transform = function (that, result) {
     var x = that.x; var y = that.y; var z = that.z;
     if (!result) {
@@ -204,6 +216,13 @@
     this.m00 = 0; this.m01 = 0; this.m02 = 0;
     this.m10 = 0; this.m11 = 0; this.m12 = 0;
     this.m20 = 0; this.m21 = 0; this.m22 = 0;
+    return this;
+  };
+
+  Matrix3.prototype.negate = function () {
+    this.m00 = -this.m00; this.m01 = -this.m01; this.m02 = -this.m02;
+    this.m10 = -this.m10; this.m11 = -this.m11; this.m12 = -this.m12;
+    this.m20 = -this.m20; this.m21 = -this.m21; this.m22 = -this.m22;
     return this;
   };
 

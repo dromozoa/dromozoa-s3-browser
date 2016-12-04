@@ -111,6 +111,14 @@
       .mul(new Matrix3(9, 8, 7, 6, 5, 4, 3, 2, 1))
       .equals(new Matrix3(30, 24, 18, 84, 69, 54, 138, 114, 90)));
 
+    m = new Matrix3().rot_z(Math.PI / 4);
+    m = m.mul(m);
+    assert(m.epsilon_equals(new Matrix3().rot_z(Math.PI / 2), epsilon));
+
+    assert(new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
+      .negate()
+      .equals(new Matrix3(-1, -2, -3, -4, -5, -6, -7, -8, -9)));
+
     $("body")
       .append($("<div>")
         .text(assert.count + " assertions are passed"));
