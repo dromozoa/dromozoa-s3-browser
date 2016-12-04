@@ -60,15 +60,32 @@
     assert(new Vector2(3, 4).clone().length() === 5);
 
     var m = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
-    assert(m.m00 === 1);
-    assert(m.m01 === 2);
-    assert(m.m02 === 3);
-    assert(m.m10 === 4);
-    assert(m.m11 === 5);
-    assert(m.m12 === 6);
-    assert(m.m20 === 7);
-    assert(m.m21 === 8);
-    assert(m.m22 === 9);
+    assert(m.m00 === 1 && m.m01 === 2 && m.m02 === 3);
+    assert(m.m10 === 4 && m.m11 === 5 && m.m12 === 6);
+    assert(m.m20 === 7 && m.m21 === 8 && m.m22 === 9);
+
+    m = m.clone();
+    assert(m.m00 === 1 && m.m01 === 2 && m.m02 === 3);
+    assert(m.m10 === 4 && m.m11 === 5 && m.m12 === 6);
+    assert(m.m20 === 7 && m.m21 === 8 && m.m22 === 9);
+
+    assert(m.equals(m.clone()));
+    assert(new Matrix3().set_zero().equals(new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0)));
+    assert(new Matrix3().set_identity().equals(new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1)));
+    assert(m.clone().set_row(0, 11, 12, 13).equals(new Matrix3(11, 12, 13, 4, 5, 6, 7, 8, 9)));
+    assert(m.clone().set_row(1, 14, 15, 16).equals(new Matrix3(1, 2, 3, 14, 15, 16, 7, 8, 9)));
+    assert(m.clone().set_row(2, 17, 18, 19).equals(new Matrix3(1, 2, 3, 4, 5, 6, 17, 18, 19)));
+    assert(m.clone().set_col(0, 11, 14, 17).equals(new Matrix3(11, 2, 3, 14, 5, 6, 17, 8, 9)));
+    assert(m.clone().set_col(1, 12, 15, 18).equals(new Matrix3(1, 12, 3, 4, 15, 6, 7, 18, 9)));
+    assert(m.clone().set_col(2, 13, 16, 19).equals(new Matrix3(1, 2, 13, 4, 5, 16, 7, 8, 19)));
+    assert(m.clone().transpose().equals(new Matrix3(1, 4, 7, 2, 5, 8, 3, 6, 9)));
+
+    m = new Matrix3(1, 2, 1, 2, 1, 0, 1, 1, 2);
+    assert(m.determinant() === -5);
+    m.invert();
+    assert(m.m00 === -0.4 && m.m01 ===  0.6 && m.m02 ===  0.2);
+    assert(m.m10 ===  0.8 && m.m11 === -0.2 && m.m12 === -0.4);
+    assert(m.m20 === -0.2 && m.m21 === -0.2 && m.m22 ===  0.6);
 
   });
 }(this.self));
