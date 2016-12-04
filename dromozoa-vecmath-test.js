@@ -22,9 +22,11 @@
   var console = root.console;
   var $ = root.jQuery;
   var vecmath = root.dromozoa.vecmath;
+  var epsilon = 2.22044604925031e-16;
 
   function assert(result, message) {
     if (result) {
+      assert.count += 1;
       return result;
     }
     if (!message) {
@@ -34,6 +36,8 @@
     console.log(e, e.stack);
     throw e;
   }
+
+  assert.count = 0;
 
   var Tuple2 = assert(vecmath.Tuple2);
   var Vector2 = assert(vecmath.Vector2);
@@ -87,5 +91,12 @@
     assert(m.m10 ===  0.8 && m.m11 === -0.2 && m.m12 === -0.4);
     assert(m.m20 === -0.2 && m.m21 === -0.2 && m.m22 ===  0.6);
 
+    var v = new Matrix3().set_identity().rot_z(Math.PI / 4).transform(new Vector2(1, 1).normalize());
+    console.log(v);
+    assert(v.epsilon_equals(new Vector2(0, 1), epsilon));
+
+    $("body")
+      .append($("<div>")
+        .text(assert.count + " assertions are passed"));
   });
 }(this.self));

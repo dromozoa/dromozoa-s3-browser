@@ -61,6 +61,10 @@
     return this.x === that.x && this.y === that.y;
   };
 
+  Tuple2.prototype.epsilon_equals = function (that, epsilon) {
+    return abs(this.x - that.x) <= epsilon && abs(this.y - that.y) <= epsilon;
+  };
+
   Tuple2.prototype.clone = function () {
     return new Tuple2(this.x, this.y);
   };
