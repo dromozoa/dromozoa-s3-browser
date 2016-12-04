@@ -19,26 +19,39 @@
 (function (root) {
   "use strict";
   var Math = root.Math;
-  var abs = Math.abs;
-  var atan2 = Math.atan2;
-  var cos = Math.cos;
-  var sin = Math.sin;
-  var sqrt = Math.sqrt;
 
   function Tuple2(x, y) {
     this.x = x;
     this.y = y;
   }
 
+  Tuple2.prototype.clone = function () {
+    return new Tuple2(this.x, this.y);
+  };
+
+  Tuple2.prototype.toString = function () {
+    return "[" + this.x + "," + this.y + "]";
+  };
+
+  Tuple2.prototype.equals = function (that) {
+    return this.x === that.x
+      && this.y === that.y;
+  };
+
+  Tuple2.prototype.epsilon_equals = function (that, epsilon) {
+    return Math.abs(this.x - that.x) <= epsilon
+      && Math.abs(this.y - that.y) <= epsilon;
+  };
+
   Tuple2.prototype.absolute = function () {
-    this.x = abs(this.x);
-    this.y = abs(this.y);
+    this.x = Math.abs(this.x);
+    this.y = Math.abs(this.y);
     return this;
   };
 
-  Tuple2.prototype.scale = function (s) {
-    this.x *= s;
-    this.y *= s;
+  Tuple2.prototype.negate = function () {
+    this.x = -this.x;
+    this.y = -this.y;
     return this;
   };
 
@@ -54,6 +67,22 @@
     return this;
   };
 
+  Tuple2.prototype.clamp_min = function (min) {
+    this.x = Math.max(this.x, min);
+    this.y = Math.max(this.y, min);
+    return this;
+  };
+
+  Tuple2.prototype.clamp_max = function (max) {
+    this.x = Math.min(this.x, max);
+    this.y = Math.min(this.y, max);
+    return this;
+  };
+
+  Tuple2.prototype.clamp = function (min, max) {
+    return this.clamp_min(min).clamp_max(max);
+  };
+
   Tuple2.prototype.interpolate = function (that, alpha) {
     var beta = 1 - alpha;
     this.x = this.x * beta + that.x * alpha;
@@ -61,22 +90,14 @@
     return this;
   };
 
-  Tuple2.prototype.equals = function (that) {
-    return this.x === that.x
-      && this.y === that.y;
+  Tuple2.prototype.scale = function (s) {
+    this.x *= s;
+    this.y *= s;
+    return this;
   };
 
-  Tuple2.prototype.epsilon_equals = function (that, epsilon) {
-    return abs(this.x - that.x) <= epsilon
-      && abs(this.y - that.y) <= epsilon;
-  };
-
-  Tuple2.prototype.clone = function () {
-    return new Tuple2(this.x, this.y);
-  };
-
-  Tuple2.prototype.toString = function () {
-    return "[" + this.x + "," + this.y + "]";
+  Tuple2.prototype.scale_add = function (s, that) {
+    return this.scale(s).add(that);
   };
 
   function Vector2(x, y) {
@@ -85,6 +106,10 @@
 
   Vector2.prototype = root.Object.create(Tuple2.prototype);
 
+  Vector2.prototype.clone = function () {
+    return new Vector2(this.x, this.y);
+  };
+
   Vector2.prototype.length_squared = function () {
     var x = this.x;
     var y = this.y;
@@ -92,7 +117,7 @@
   };
 
   Vector2.prototype.length = function () {
-    return sqrt(this.length_squared());
+    return Math.sqrt(this.length_squared());
   };
 
   Vector2.prototype.dot = function (that) {
@@ -100,15 +125,11 @@
   };
 
   Vector2.prototype.angle = function (that) {
-    return abs(atan2(this.x * that.y - this.y * that.x, this.dot(that)));
+    return Math.abs(Math.atan2(this.x * that.y - this.y * that.x, this.dot(that)));
   };
 
   Vector2.prototype.normalize = function () {
     return this.scale(1 / this.length());
-  };
-
-  Vector2.prototype.clone = function () {
-    return new Vector2(this.x, this.y);
   };
 
   function Matrix3(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
@@ -187,8 +208,8 @@
   };
 
   Matrix3.prototype.rot_x = function (angle) {
-    var c = cos(angle);
-    var s = sin(angle);
+    var c = Math.cos(angle);
+    var s = Math.sin(angle);
     this.m00 = 1; this.m01 = 0; this.m02 =  0;
     this.m10 = 0; this.m11 = c; this.m12 = -s;
     this.m20 = 0; this.m21 = s; this.m22 =  c;
@@ -196,8 +217,8 @@
   };
 
   Matrix3.prototype.rot_y = function (angle) {
-    var c = cos(angle);
-    var s = sin(angle);
+    var c = Math.cos(angle);
+    var s = Math.sin(angle);
     this.m00 =  c; this.m01 = 0; this.m02 = s;
     this.m10 =  0; this.m11 = 1; this.m12 = 0;
     this.m20 = -s; this.m21 = 0; this.m22 = c;
@@ -205,8 +226,8 @@
   };
 
   Matrix3.prototype.rot_z = function (angle) {
-    var c = cos(angle);
-    var s = sin(angle);
+    var c = Math.cos(angle);
+    var s = Math.sin(angle);
     this.m00 = c; this.m01 = -s; this.m02 = 0;
     this.m10 = s; this.m11 =  c; this.m12 = 0;
     this.m20 = 0; this.m21 =  0; this.m22 = 1;

@@ -55,6 +55,10 @@
     assert(!t1.equals(t2));
     assert(t2.equals({ x: 2, y: 4 }));
 
+    assert(new Tuple2(1, -2).negate().equals(new Tuple2(-1, 2)));
+    assert(new Tuple2(1, 42).clamp(17, 23).equals(new Tuple2(17, 23)));
+    assert(new Tuple2(1, 2).scale_add(2, { x: 4, y: 1 }).equals(new Tuple2(6, 5)));
+
     assert(new Vector2(3, 4).length_squared() === 25);
     assert(new Vector2(3, 4).length() === 5);
     assert(new Vector2(1, 2).dot(new Vector2(3, 4)) === 11);
@@ -92,7 +96,6 @@
     assert(m.m20 === -0.2 && m.m21 === -0.2 && m.m22 ===  0.6);
 
     var v = new Matrix3().set_identity().rot_z(Math.PI / 4).transform(new Vector2(1, 1).normalize());
-    console.log(v);
     assert(v.epsilon_equals(new Vector2(0, 1), epsilon));
 
     $("body")
