@@ -20,6 +20,10 @@
   "use strict";
   var Math = root.Math;
   var abs = Math.abs;
+  var atan2 = Math.atan2;
+  var cos = Math.cos;
+  var sin = Math.sin;
+  var sqrt = Math.sqrt;
 
   function Tuple2(x, y) {
     this.x = x;
@@ -58,11 +62,13 @@
   };
 
   Tuple2.prototype.equals = function (that) {
-    return this.x === that.x && this.y === that.y;
+    return this.x === that.x
+      && this.y === that.y;
   };
 
   Tuple2.prototype.epsilon_equals = function (that, epsilon) {
-    return abs(this.x - that.x) <= epsilon && abs(this.y - that.y) <= epsilon;
+    return abs(this.x - that.x) <= epsilon
+      && abs(this.y - that.y) <= epsilon;
   };
 
   Tuple2.prototype.clone = function () {
@@ -86,7 +92,7 @@
   };
 
   Vector2.prototype.length = function () {
-    return Math.sqrt(this.length_squared());
+    return sqrt(this.length_squared());
   };
 
   Vector2.prototype.dot = function (that) {
@@ -94,7 +100,7 @@
   };
 
   Vector2.prototype.angle = function (that) {
-    return Math.abs(Math.atan2(this.x * that.y - this.y * that.x, this.dot(that)));
+    return abs(atan2(this.x * that.y - this.y * that.x, this.dot(that)));
   };
 
   Vector2.prototype.normalize = function () {
@@ -181,8 +187,8 @@
   };
 
   Matrix3.prototype.rot_x = function (angle) {
-    var c = Math.cos(angle);
-    var s = Math.sin(angle);
+    var c = cos(angle);
+    var s = sin(angle);
     this.m00 = 1; this.m01 = 0; this.m02 =  0;
     this.m10 = 0; this.m11 = c; this.m12 = -s;
     this.m20 = 0; this.m21 = s; this.m22 =  c;
@@ -190,8 +196,8 @@
   };
 
   Matrix3.prototype.rot_y = function (angle) {
-    var c = Math.cos(angle);
-    var s = Math.sin(angle);
+    var c = cos(angle);
+    var s = sin(angle);
     this.m00 =  c; this.m01 = 0; this.m02 = s;
     this.m10 =  0; this.m11 = 1; this.m12 = 0;
     this.m20 = -s; this.m21 = 0; this.m22 = c;
@@ -199,8 +205,8 @@
   };
 
   Matrix3.prototype.rot_z = function (angle) {
-    var c = Math.cos(angle);
-    var s = Math.sin(angle);
+    var c = cos(angle);
+    var s = sin(angle);
     this.m00 = c; this.m01 = -s; this.m02 = 0;
     this.m10 = s; this.m11 =  c; this.m12 = 0;
     this.m20 = 0; this.m21 =  0; this.m22 = 1;
