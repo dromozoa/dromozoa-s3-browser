@@ -19,22 +19,44 @@
 (function (root) {
   "use strict";
   var Math = root.Math;
-  var abs = Math.abs;
 
   function Tuple2(x, y) {
-    this.x = x;
-    this.y = y;
+    if (x === undefined) {
+      this.x = 0;
+      this.y = 0;
+    } else {
+      this.x = x;
+      this.y = y;
+    }
   }
 
+  Tuple2.prototype.clone = function () {
+    return new Tuple2(this.x, this.y);
+  };
+
+  Tuple2.prototype.toString = function () {
+    return "[" + this.x + "," + this.y + "]";
+  };
+
+  Tuple2.prototype.equals = function (that) {
+    return this.x === that.x
+      && this.y === that.y;
+  };
+
+  Tuple2.prototype.epsilon_equals = function (that, epsilon) {
+    return Math.abs(this.x - that.x) <= epsilon
+      && Math.abs(this.y - that.y) <= epsilon;
+  };
+
   Tuple2.prototype.absolute = function () {
-    this.x = abs(this.x);
-    this.y = abs(this.y);
+    this.x = Math.abs(this.x);
+    this.y = Math.abs(this.y);
     return this;
   };
 
-  Tuple2.prototype.scale = function (s) {
-    this.x *= s;
-    this.y *= s;
+  Tuple2.prototype.negate = function () {
+    this.x = -this.x;
+    this.y = -this.y;
     return this;
   };
 
@@ -50,6 +72,22 @@
     return this;
   };
 
+  Tuple2.prototype.clamp_min = function (min) {
+    this.x = Math.max(this.x, min);
+    this.y = Math.max(this.y, min);
+    return this;
+  };
+
+  Tuple2.prototype.clamp_max = function (max) {
+    this.x = Math.min(this.x, max);
+    this.y = Math.min(this.y, max);
+    return this;
+  };
+
+  Tuple2.prototype.clamp = function (min, max) {
+    return this.clamp_min(min).clamp_max(max);
+  };
+
   Tuple2.prototype.interpolate = function (that, alpha) {
     var beta = 1 - alpha;
     this.x = this.x * beta + that.x * alpha;
@@ -57,16 +95,14 @@
     return this;
   };
 
-  Tuple2.prototype.equals = function (that) {
-    return this.x === that.x && this.y === that.y;
+  Tuple2.prototype.scale = function (s) {
+    this.x *= s;
+    this.y *= s;
+    return this;
   };
 
-  Tuple2.prototype.clone = function () {
-    return new Tuple2(this.x, this.y);
-  };
-
-  Tuple2.prototype.toString = function () {
-    return "[" + this.x + "," + this.y + "]";
+  Tuple2.prototype.scale_add = function (s, that) {
+    return this.scale(s).add(that);
   };
 
   function Vector2(x, y) {
@@ -74,6 +110,10 @@
   }
 
   Vector2.prototype = root.Object.create(Tuple2.prototype);
+
+  Vector2.prototype.clone = function () {
+    return new Vector2(this.x, this.y);
+  };
 
   Vector2.prototype.length_squared = function () {
     var x = this.x;
@@ -97,15 +137,30 @@
     return this.scale(1 / this.length());
   };
 
-  Vector2.prototype.clone = function () {
-    return new Vector2(this.x, this.y);
+  function Matrix3(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
+    if (m00 === undefined) {
+      this.m00 = 0; this.m01 = 0; this.m02 = 0;
+      this.m10 = 0; this.m11 = 0; this.m12 = 0;
+      this.m20 = 0; this.m21 = 0; this.m22 = 0;
+    } else {
+      this.m00 = m00; this.m01 = m01; this.m02 = m02;
+      this.m10 = m10; this.m11 = m11; this.m12 = m12;
+      this.m20 = m20; this.m21 = m21; this.m22 = m22;
+    }
+  }
+
+  Matrix3.prototype.clone = function () {
+    return new Matrix3(
+        this.m00, this.m01, this.m02,
+        this.m10, this.m11, this.m12,
+        this.m20, this.m21, this.m22);
   };
 
-  function Matrix3(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
-    this.m00 = m00; this.m01 = m01; this.m02 = m02;
-    this.m10 = m10; this.m11 = m11; this.m12 = m12;
-    this.m20 = m20; this.m21 = m21; this.m22 = m22;
-  }
+  Matrix3.prototype.toString = function () {
+    return "[[" + this.m00 + "," + this.m01 + "," + this.m02
+      + "],[" + this.m10 + "," + this.m11 + "," + this.m12
+      + "],[" + this.m20 + "," + this.m21 + "," + this.m22 + "]]";
+  };
 
   Matrix3.prototype.determinant = function () {
     var m00 = this.m00; var m01 = this.m01; var m02 = this.m02;
@@ -116,11 +171,38 @@
         + m02 * (m10 * m21 - m20 * m11);
   };
 
-  Matrix3.prototype.set_zero = function () {
-    this.m00 = 0; this.m01 = 0; this.m02 = 0;
-    this.m10 = 0; this.m11 = 0; this.m12 = 0;
-    this.m20 = 0; this.m21 = 0; this.m22 = 0;
-    return this;
+  Matrix3.prototype.equals = function (that) {
+    return this.m00 === that.m00 && this.m01 === that.m01 && this.m02 === that.m02
+      && this.m10 === that.m10 && this.m11 === that.m11 && this.m12 === that.m12
+      && this.m20 === that.m20 && this.m21 === that.m21 && this.m22 === that.m22;
+  };
+
+  Matrix3.prototype.epsilon_equals = function (that, epsilon) {
+    return Math.abs(this.m00 - that.m00) <= epsilon
+      && Math.abs(this.m01 - that.m01) <= epsilon
+      && Math.abs(this.m02 - that.m02) <= epsilon
+      && Math.abs(this.m10 - that.m10) <= epsilon
+      && Math.abs(this.m11 - that.m11) <= epsilon
+      && Math.abs(this.m12 - that.m12) <= epsilon
+      && Math.abs(this.m20 - that.m20) <= epsilon
+      && Math.abs(this.m21 - that.m21) <= epsilon
+      && Math.abs(this.m22 - that.m22) <= epsilon;
+  };
+
+  Matrix3.prototype.transform = function (that, result) {
+    var x = that.x; var y = that.y; var z = that.z;
+    if (!result) {
+      result = that;
+    }
+    if (z) {
+      result.x = this.m00 * x + this.m01 * y + this.m02 * z;
+      result.y = this.m10 * x + this.m11 * y + this.m12 * z;
+      result.z = this.m20 * x + this.m21 * y + this.m22 * z;
+    } else {
+      result.x = this.m00 * x + this.m01 * y + this.m02;
+      result.y = this.m10 * x + this.m11 * y + this.m12;
+    }
+    return result;
   };
 
   Matrix3.prototype.set_identity = function () {
@@ -130,25 +212,17 @@
     return this;
   };
 
-  Matrix3.prototype.set_row = function (row, x, y, z) {
-    if (row === 0) {
-      this.m00 = x; this.m01 = y; this.m02 = z;
-    } else if (row === 1) {
-      this.m10 = x; this.m11 = y; this.m12 = z;
-    } else if (row === 2) {
-      this.m20 = x; this.m21 = y; this.m22 = z;
-    }
+  Matrix3.prototype.set_zero = function () {
+    this.m00 = 0; this.m01 = 0; this.m02 = 0;
+    this.m10 = 0; this.m11 = 0; this.m12 = 0;
+    this.m20 = 0; this.m21 = 0; this.m22 = 0;
     return this;
   };
 
-  Matrix3.prototype.set_col = function (col, x, y, z) {
-    if (col === 0) {
-      this.m00 = x; this.m10 = y; this.m20 = z;
-    } else if (col === 1) {
-      this.m01 = x; this.m11 = y; this.m21 = z;
-    } else if (col === 2) {
-      this.m02 = x; this.m12 = y; this.m22 = z;
-    }
+  Matrix3.prototype.negate = function () {
+    this.m00 = -this.m00; this.m01 = -this.m01; this.m02 = -this.m02;
+    this.m10 = -this.m10; this.m11 = -this.m11; this.m12 = -this.m12;
+    this.m20 = -this.m20; this.m21 = -this.m21; this.m22 = -this.m22;
     return this;
   };
 
@@ -173,6 +247,61 @@
     this.m20 = (m10 * m21 - m11 * m20) / d;
     this.m21 = (m01 * m20 - m00 * m21) / d;
     this.m22 = (m00 * m11 - m01 * m10) / d;
+    return this;
+  };
+
+  Matrix3.prototype.set_row = function (row, x, y, z) {
+    if (row === 0) {
+      this.m00 = x; this.m01 = y; this.m02 = z;
+    } else if (row === 1) {
+      this.m10 = x; this.m11 = y; this.m12 = z;
+    } else if (row === 2) {
+      this.m20 = x; this.m21 = y; this.m22 = z;
+    }
+    return this;
+  };
+
+  Matrix3.prototype.set_column = function (column, x, y, z) {
+    if (column === 0) {
+      this.m00 = x; this.m10 = y; this.m20 = z;
+    } else if (column === 1) {
+      this.m01 = x; this.m11 = y; this.m21 = z;
+    } else if (column === 2) {
+      this.m02 = x; this.m12 = y; this.m22 = z;
+    }
+    return this;
+  };
+
+  Matrix3.prototype.add = function (that) {
+    this.m00 += that.m00; this.m01 += that.m01; this.m02 += that.m02;
+    this.m10 += that.m10; this.m11 += that.m11; this.m12 += that.m12;
+    this.m20 += that.m20; this.m21 += that.m21; this.m22 += that.m22;
+    return this;
+  };
+
+  Matrix3.prototype.sub = function (that) {
+    this.m00 -= that.m00; this.m01 -= that.m01; this.m02 -= that.m02;
+    this.m10 -= that.m10; this.m11 -= that.m11; this.m12 -= that.m12;
+    this.m20 -= that.m20; this.m21 -= that.m21; this.m22 -= that.m22;
+    return this;
+  };
+
+  Matrix3.prototype.mul = function (that) {
+    var m00 = this.m00; var m01 = this.m01; var m02 = this.m02;
+    var m10 = this.m10; var m11 = this.m11; var m12 = this.m12;
+    var m20 = this.m20; var m21 = this.m21; var m22 = this.m22;
+    var n00 = that.m00; var n01 = that.m01; var n02 = that.m02;
+    var n10 = that.m10; var n11 = that.m11; var n12 = that.m12;
+    var n20 = that.m20; var n21 = that.m21; var n22 = that.m22;
+    this.m00 = m00 * n00 + m01 * n10 + m02 * n20;
+    this.m01 = m00 * n01 + m01 * n11 + m02 * n21;
+    this.m02 = m00 * n02 + m01 * n12 + m02 * n22;
+    this.m10 = m10 * n00 + m11 * n10 + m12 * n20;
+    this.m11 = m10 * n01 + m11 * n11 + m12 * n21;
+    this.m12 = m10 * n02 + m11 * n12 + m12 * n22;
+    this.m20 = m20 * n00 + m21 * n10 + m22 * n20;
+    this.m21 = m20 * n01 + m21 * n11 + m22 * n21;
+    this.m22 = m20 * n02 + m21 * n12 + m22 * n22;
     return this;
   };
 
@@ -201,41 +330,6 @@
     this.m10 = s; this.m11 =  c; this.m12 = 0;
     this.m20 = 0; this.m21 =  0; this.m22 = 1;
     return this;
-  };
-
-  Matrix3.prototype.transform = function (that, result) {
-    var x = that.x; var y = that.y; var z = that.z;
-    if (!result) {
-      result = that;
-    }
-    if (z) {
-      result.x = this.m00 * x + this.m01 * y + this.m02 * z;
-      result.y = this.m10 * x + this.m11 * y + this.m12 * z;
-      result.z = this.m20 * x + this.m21 * y + this.m22 * z;
-    } else {
-      result.x = this.m00 * x + this.m01 * y + this.m02;
-      result.y = this.m10 * x + this.m11 * y + this.m12;
-    }
-    return result;
-  };
-
-  Matrix3.prototype.equals = function (that) {
-    return this.m00 === that.m00 && this.m01 === that.m01 && this.m02 === that.m02
-      && this.m10 === that.m10 && this.m11 === that.m11 && this.m12 === that.m12
-      && this.m20 === that.m20 && this.m21 === that.m21 && this.m22 === that.m22;
-  };
-
-  Matrix3.prototype.clone = function () {
-    return new Matrix3(
-        this.m00, this.m01, this.m02,
-        this.m10, this.m11, this.m12,
-        this.m20, this.m21, this.m22);
-  };
-
-  Matrix3.prototype.toString = function () {
-    return "[[" + this.m00 + "," + this.m01 + "," + this.m02
-      + "],[" + this.m10 + "," + this.m11 + "," + this.m12
-      + "],[" + this.m20 + "," + this.m21 + "," + this.m22 + "]]";
   };
 
   if (!root.dromozoa) {

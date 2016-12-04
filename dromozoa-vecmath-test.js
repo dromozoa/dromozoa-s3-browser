@@ -22,9 +22,11 @@
   var console = root.console;
   var $ = root.jQuery;
   var vecmath = root.dromozoa.vecmath;
+  var epsilon = 2.22044604925031e-16;
 
   function assert(result, message) {
     if (result) {
+      assert.count += 1;
       return result;
     }
     if (!message) {
@@ -34,6 +36,8 @@
     console.log(e, e.stack);
     throw e;
   }
+
+  assert.count = 0;
 
   var Tuple2 = assert(vecmath.Tuple2);
   var Vector2 = assert(vecmath.Vector2);
@@ -50,6 +54,11 @@
     var t2 = t1.clone().scale(2);
     assert(!t1.equals(t2));
     assert(t2.equals({ x: 2, y: 4 }));
+
+    assert(new Tuple2(1, -2).negate().equals(new Tuple2(-1, 2)));
+    assert(new Tuple2(1, 42).clamp(17, 23).equals(new Tuple2(17, 23)));
+    assert(new Tuple2(1, 2).scale_add(2, { x: 4, y: 1 }).equals(new Tuple2(6, 5)));
+    assert(new Tuple2().equals(new Tuple2(0, 0)));
 
     assert(new Vector2(3, 4).length_squared() === 25);
     assert(new Vector2(3, 4).length() === 5);
@@ -75,9 +84,9 @@
     assert(m.clone().set_row(0, 11, 12, 13).equals(new Matrix3(11, 12, 13, 4, 5, 6, 7, 8, 9)));
     assert(m.clone().set_row(1, 14, 15, 16).equals(new Matrix3(1, 2, 3, 14, 15, 16, 7, 8, 9)));
     assert(m.clone().set_row(2, 17, 18, 19).equals(new Matrix3(1, 2, 3, 4, 5, 6, 17, 18, 19)));
-    assert(m.clone().set_col(0, 11, 14, 17).equals(new Matrix3(11, 2, 3, 14, 5, 6, 17, 8, 9)));
-    assert(m.clone().set_col(1, 12, 15, 18).equals(new Matrix3(1, 12, 3, 4, 15, 6, 7, 18, 9)));
-    assert(m.clone().set_col(2, 13, 16, 19).equals(new Matrix3(1, 2, 13, 4, 5, 16, 7, 8, 19)));
+    assert(m.clone().set_column(0, 11, 14, 17).equals(new Matrix3(11, 2, 3, 14, 5, 6, 17, 8, 9)));
+    assert(m.clone().set_column(1, 12, 15, 18).equals(new Matrix3(1, 12, 3, 4, 15, 6, 7, 18, 9)));
+    assert(m.clone().set_column(2, 13, 16, 19).equals(new Matrix3(1, 2, 13, 4, 5, 16, 7, 8, 19)));
     assert(m.clone().transpose().equals(new Matrix3(1, 4, 7, 2, 5, 8, 3, 6, 9)));
 
     m = new Matrix3(1, 2, 1, 2, 1, 0, 1, 1, 2);
@@ -87,5 +96,31 @@
     assert(m.m10 ===  0.8 && m.m11 === -0.2 && m.m12 === -0.4);
     assert(m.m20 === -0.2 && m.m21 === -0.2 && m.m22 ===  0.6);
 
+    var v = new Matrix3().set_identity().rot_z(Math.PI / 4).transform(new Vector2(1, 1).normalize());
+    assert(v.epsilon_equals(new Vector2(0, 1), epsilon));
+
+    assert(new Matrix3().equals(new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0)));
+
+    assert(new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
+      .add(new Matrix3(9, 8, 7, 6, 5, 4, 3, 2, 1))
+      .equals(new Matrix3(10, 10, 10, 10, 10, 10, 10, 10, 10)));
+    assert(new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
+      .sub(new Matrix3(9, 8, 7, 6, 5, 4, 3, 2, 1))
+      .equals(new Matrix3(-8, -6, -4, -2, 0, 2, 4, 6, 8)));
+    assert(new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
+      .mul(new Matrix3(9, 8, 7, 6, 5, 4, 3, 2, 1))
+      .equals(new Matrix3(30, 24, 18, 84, 69, 54, 138, 114, 90)));
+
+    m = new Matrix3().rot_z(Math.PI / 4);
+    m = m.mul(m);
+    assert(m.epsilon_equals(new Matrix3().rot_z(Math.PI / 2), epsilon));
+
+    assert(new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
+      .negate()
+      .equals(new Matrix3(-1, -2, -3, -4, -5, -6, -7, -8, -9)));
+
+    $("body")
+      .append($("<div>")
+        .text(assert.count + " assertions are passed"));
   });
 }(this.self));
