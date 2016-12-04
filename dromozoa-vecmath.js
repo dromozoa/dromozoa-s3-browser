@@ -289,26 +289,26 @@
 
   Matrix3.prototype.toString = function () {
     return "[[" + this.m00 + "," + this.m01 + "," + this.m02
-      + "],[" + this.m10 + "," + this.m11 + "," + this.m12
-      + "],[" + this.m20 + "," + this.m21 + "," + this.m22 + "]]";
+        + "],[" + this.m10 + "," + this.m11 + "," + this.m12
+        + "],[" + this.m20 + "," + this.m21 + "," + this.m22 + "]]";
   };
 
   Matrix3.prototype.equals = function (that) {
     return this.m00 === that.m00 && this.m01 === that.m01 && this.m02 === that.m02
-      && this.m10 === that.m10 && this.m11 === that.m11 && this.m12 === that.m12
-      && this.m20 === that.m20 && this.m21 === that.m21 && this.m22 === that.m22;
+        && this.m10 === that.m10 && this.m11 === that.m11 && this.m12 === that.m12
+        && this.m20 === that.m20 && this.m21 === that.m21 && this.m22 === that.m22;
   };
 
   Matrix3.prototype.epsilon_equals = function (that, epsilon) {
     return Math.abs(this.m00 - that.m00) <= epsilon
-      && Math.abs(this.m01 - that.m01) <= epsilon
-      && Math.abs(this.m02 - that.m02) <= epsilon
-      && Math.abs(this.m10 - that.m10) <= epsilon
-      && Math.abs(this.m11 - that.m11) <= epsilon
-      && Math.abs(this.m12 - that.m12) <= epsilon
-      && Math.abs(this.m20 - that.m20) <= epsilon
-      && Math.abs(this.m21 - that.m21) <= epsilon
-      && Math.abs(this.m22 - that.m22) <= epsilon;
+        && Math.abs(this.m01 - that.m01) <= epsilon
+        && Math.abs(this.m02 - that.m02) <= epsilon
+        && Math.abs(this.m10 - that.m10) <= epsilon
+        && Math.abs(this.m11 - that.m11) <= epsilon
+        && Math.abs(this.m12 - that.m12) <= epsilon
+        && Math.abs(this.m20 - that.m20) <= epsilon
+        && Math.abs(this.m21 - that.m21) <= epsilon
+        && Math.abs(this.m22 - that.m22) <= epsilon;
   };
 
   Matrix3.prototype.determinant = function () {
@@ -316,8 +316,8 @@
     var m10 = this.m10; var m11 = this.m11; var m12 = this.m12;
     var m20 = this.m20; var m21 = this.m21; var m22 = this.m22;
     return m00 * (m11 * m22 - m21 * m12)
-        - m01 * (m10 * m22 - m20 * m12)
-        + m02 * (m10 * m21 - m20 * m11);
+        -  m01 * (m10 * m22 - m20 * m12)
+        +  m02 * (m10 * m21 - m20 * m11);
   };
 
   Matrix3.prototype.transform = function (that, result) {
