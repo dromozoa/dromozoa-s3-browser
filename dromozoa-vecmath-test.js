@@ -58,6 +58,7 @@
     assert(new Tuple2(1, -2).negate().equals(new Tuple2(-1, 2)));
     assert(new Tuple2(1, 42).clamp(17, 23).equals(new Tuple2(17, 23)));
     assert(new Tuple2(1, 2).scale_add(2, { x: 4, y: 1 }).equals(new Tuple2(6, 5)));
+    assert(new Tuple2().equals(new Tuple2(0, 0)));
 
     assert(new Vector2(3, 4).length_squared() === 25);
     assert(new Vector2(3, 4).length() === 5);

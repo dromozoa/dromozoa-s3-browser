@@ -21,8 +21,13 @@
   var Math = root.Math;
 
   function Tuple2(x, y) {
-    this.x = x;
-    this.y = y;
+    if (x === undefined) {
+      this.x = 0;
+      this.y = 0;
+    } else {
+      this.x = x;
+      this.y = y;
+    }
   }
 
   Tuple2.prototype.clone = function () {
