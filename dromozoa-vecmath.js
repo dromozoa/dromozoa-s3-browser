@@ -193,17 +193,17 @@
     return result;
   };
 
-  Matrix3.prototype.set_zero = function () {
-    this.m00 = 0; this.m01 = 0; this.m02 = 0;
-    this.m10 = 0; this.m11 = 0; this.m12 = 0;
-    this.m20 = 0; this.m21 = 0; this.m22 = 0;
-    return this;
-  };
-
   Matrix3.prototype.set_identity = function () {
     this.m00 = 1; this.m01 = 0; this.m02 = 0;
     this.m10 = 0; this.m11 = 1; this.m12 = 0;
     this.m20 = 0; this.m21 = 0; this.m22 = 1;
+    return this;
+  };
+
+  Matrix3.prototype.set_zero = function () {
+    this.m00 = 0; this.m01 = 0; this.m02 = 0;
+    this.m10 = 0; this.m11 = 0; this.m12 = 0;
+    this.m20 = 0; this.m21 = 0; this.m22 = 0;
     return this;
   };
 
@@ -242,14 +242,47 @@
     return this;
   };
 
-  Matrix3.prototype.set_col = function (col, x, y, z) {
-    if (col === 0) {
+  Matrix3.prototype.set_column = function (column, x, y, z) {
+    if (column === 0) {
       this.m00 = x; this.m10 = y; this.m20 = z;
-    } else if (col === 1) {
+    } else if (column === 1) {
       this.m01 = x; this.m11 = y; this.m21 = z;
-    } else if (col === 2) {
+    } else if (column === 2) {
       this.m02 = x; this.m12 = y; this.m22 = z;
     }
+    return this;
+  };
+
+  Matrix3.prototype.add = function (that) {
+    this.m00 += that.m00; this.m01 += that.m01; this.m02 += that.m02;
+    this.m10 += that.m10; this.m11 += that.m11; this.m12 += that.m12;
+    this.m20 += that.m20; this.m21 += that.m21; this.m22 += that.m22;
+    return this;
+  };
+
+  Matrix3.prototype.sub = function (that) {
+    this.m00 -= that.m00; this.m01 -= that.m01; this.m02 -= that.m02;
+    this.m10 -= that.m10; this.m11 -= that.m11; this.m12 -= that.m12;
+    this.m20 -= that.m20; this.m21 -= that.m21; this.m22 -= that.m22;
+    return this;
+  };
+
+  Matrix3.prototype.mul = function (that) {
+    var m00 = this.m00; var m01 = this.m01; var m02 = this.m02;
+    var m10 = this.m10; var m11 = this.m11; var m12 = this.m12;
+    var m20 = this.m20; var m21 = this.m21; var m22 = this.m22;
+    var n00 = that.m00; var n01 = that.m01; var n02 = that.m02;
+    var n10 = that.m10; var n11 = that.m11; var n12 = that.m12;
+    var n20 = that.m20; var n21 = that.m21; var n22 = that.m22;
+    this.m00 = m00 * n00 + m01 * n10 + m02 * n20;
+    this.m01 = m00 * n01 + m01 * n11 + m02 * n21;
+    this.m02 = m00 * n02 + m01 * n12 + m02 * n22;
+    this.m10 = m10 * n00 + m11 * n10 + m12 * n20;
+    this.m11 = m10 * n01 + m11 * n11 + m12 * n21;
+    this.m12 = m10 * n02 + m11 * n12 + m12 * n22;
+    this.m20 = m20 * n00 + m21 * n10 + m22 * n20;
+    this.m21 = m20 * n01 + m21 * n11 + m22 * n21;
+    this.m22 = m20 * n02 + m21 * n12 + m22 * n22;
     return this;
   };
 

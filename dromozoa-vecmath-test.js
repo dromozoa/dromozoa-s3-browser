@@ -84,9 +84,9 @@
     assert(m.clone().set_row(0, 11, 12, 13).equals(new Matrix3(11, 12, 13, 4, 5, 6, 7, 8, 9)));
     assert(m.clone().set_row(1, 14, 15, 16).equals(new Matrix3(1, 2, 3, 14, 15, 16, 7, 8, 9)));
     assert(m.clone().set_row(2, 17, 18, 19).equals(new Matrix3(1, 2, 3, 4, 5, 6, 17, 18, 19)));
-    assert(m.clone().set_col(0, 11, 14, 17).equals(new Matrix3(11, 2, 3, 14, 5, 6, 17, 8, 9)));
-    assert(m.clone().set_col(1, 12, 15, 18).equals(new Matrix3(1, 12, 3, 4, 15, 6, 7, 18, 9)));
-    assert(m.clone().set_col(2, 13, 16, 19).equals(new Matrix3(1, 2, 13, 4, 5, 16, 7, 8, 19)));
+    assert(m.clone().set_column(0, 11, 14, 17).equals(new Matrix3(11, 2, 3, 14, 5, 6, 17, 8, 9)));
+    assert(m.clone().set_column(1, 12, 15, 18).equals(new Matrix3(1, 12, 3, 4, 15, 6, 7, 18, 9)));
+    assert(m.clone().set_column(2, 13, 16, 19).equals(new Matrix3(1, 2, 13, 4, 5, 16, 7, 8, 19)));
     assert(m.clone().transpose().equals(new Matrix3(1, 4, 7, 2, 5, 8, 3, 6, 9)));
 
     m = new Matrix3(1, 2, 1, 2, 1, 0, 1, 1, 2);
@@ -100,6 +100,16 @@
     assert(v.epsilon_equals(new Vector2(0, 1), epsilon));
 
     assert(new Matrix3().equals(new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0)));
+
+    assert(new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
+      .add(new Matrix3(9, 8, 7, 6, 5, 4, 3, 2, 1))
+      .equals(new Matrix3(10, 10, 10, 10, 10, 10, 10, 10, 10)));
+    assert(new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
+      .sub(new Matrix3(9, 8, 7, 6, 5, 4, 3, 2, 1))
+      .equals(new Matrix3(-8, -6, -4, -2, 0, 2, 4, 6, 8)));
+    assert(new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9)
+      .mul(new Matrix3(9, 8, 7, 6, 5, 4, 3, 2, 1))
+      .equals(new Matrix3(30, 24, 18, 84, 69, 54, 138, 114, 90)));
 
     $("body")
       .append($("<div>")
