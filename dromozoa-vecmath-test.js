@@ -99,6 +99,8 @@
     var v = new Matrix3().set_identity().rot_z(Math.PI / 4).transform(new Vector2(1, 1).normalize());
     assert(v.epsilon_equals(new Vector2(0, 1), epsilon));
 
+    assert(new Matrix3().equals(new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0)));
+
     $("body")
       .append($("<div>")
         .text(assert.count + " assertions are passed"));

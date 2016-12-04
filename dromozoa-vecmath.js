@@ -138,9 +138,15 @@
   };
 
   function Matrix3(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
-    this.m00 = m00; this.m01 = m01; this.m02 = m02;
-    this.m10 = m10; this.m11 = m11; this.m12 = m12;
-    this.m20 = m20; this.m21 = m21; this.m22 = m22;
+    if (m00 === undefined) {
+      this.m00 = 0; this.m01 = 0; this.m02 = 0;
+      this.m10 = 0; this.m11 = 0; this.m12 = 0;
+      this.m20 = 0; this.m21 = 0; this.m22 = 0;
+    } else {
+      this.m00 = m00; this.m01 = m01; this.m02 = m02;
+      this.m10 = m10; this.m11 = m11; this.m12 = m12;
+      this.m20 = m20; this.m21 = m21; this.m22 = m22;
+    }
   }
 
   Matrix3.prototype.determinant = function () {
