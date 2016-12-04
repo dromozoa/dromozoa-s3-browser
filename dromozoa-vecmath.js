@@ -61,23 +61,27 @@
   };
 
   Tuple2.prototype.scale_add = function (s, that) {
-    return this.scale(s).add(that);
+    this.x = this.x * s + that.x;
+    this.y = this.y * s + that.y;
+    return this;
   };
 
   Tuple2.prototype.clamp_min = function (min) {
-    this.x = Math.max(this.x, min);
-    this.y = Math.max(this.y, min);
+    if (this.x < min) { this.x = min; }
+    if (this.y < min) { this.y = min; }
     return this;
   };
 
   Tuple2.prototype.clamp_max = function (max) {
-    this.x = Math.min(this.x, max);
-    this.y = Math.min(this.y, max);
+    if (this.x > max) { this.x = max; }
+    if (this.y > max) { this.y = max; }
     return this;
   };
 
   Tuple2.prototype.clamp = function (min, max) {
-    return this.clamp_min(min).clamp_max(max);
+    if (this.x > max) { this.x = max; } else if (this.x < min) { this.x = min; }
+    if (this.y > max) { this.y = max; } else if (this.y < min) { this.y = min; }
+    return this;
   };
 
   Tuple2.prototype.interpolate = function (that, alpha) {
