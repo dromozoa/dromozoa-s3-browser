@@ -30,24 +30,6 @@
     }
   }
 
-  Tuple2.prototype.clone = function () {
-    return new Tuple2(this.x, this.y);
-  };
-
-  Tuple2.prototype.toString = function () {
-    return "[" + this.x + "," + this.y + "]";
-  };
-
-  Tuple2.prototype.equals = function (that) {
-    return this.x === that.x
-      && this.y === that.y;
-  };
-
-  Tuple2.prototype.epsilon_equals = function (that, epsilon) {
-    return Math.abs(this.x - that.x) <= epsilon
-      && Math.abs(this.y - that.y) <= epsilon;
-  };
-
   Tuple2.prototype.absolute = function () {
     this.x = Math.abs(this.x);
     this.y = Math.abs(this.y);
@@ -70,6 +52,16 @@
     this.x -= that.x;
     this.y -= that.y;
     return this;
+  };
+
+  Tuple2.prototype.scale = function (s) {
+    this.x *= s;
+    this.y *= s;
+    return this;
+  };
+
+  Tuple2.prototype.scale_add = function (s, that) {
+    return this.scale(s).add(that);
   };
 
   Tuple2.prototype.clamp_min = function (min) {
@@ -95,14 +87,22 @@
     return this;
   };
 
-  Tuple2.prototype.scale = function (s) {
-    this.x *= s;
-    this.y *= s;
-    return this;
+  Tuple2.prototype.clone = function () {
+    return new Tuple2(this.x, this.y);
   };
 
-  Tuple2.prototype.scale_add = function (s, that) {
-    return this.scale(s).add(that);
+  Tuple2.prototype.toString = function () {
+    return "[" + this.x + "," + this.y + "]";
+  };
+
+  Tuple2.prototype.equals = function (that) {
+    return this.x === that.x
+      && this.y === that.y;
+  };
+
+  Tuple2.prototype.epsilon_equals = function (that, epsilon) {
+    return Math.abs(this.x - that.x) <= epsilon
+      && Math.abs(this.y - that.y) <= epsilon;
   };
 
   function Vector2(x, y) {
@@ -110,6 +110,10 @@
   }
 
   Vector2.prototype = root.Object.create(Tuple2.prototype);
+
+  Vector2.prototype.normalize = function () {
+    return this.scale(1 / this.length());
+  };
 
   Vector2.prototype.clone = function () {
     return new Vector2(this.x, this.y);
@@ -133,10 +137,6 @@
     return Math.abs(Math.atan2(this.x * that.y - this.y * that.x, this.dot(that)));
   };
 
-  Vector2.prototype.normalize = function () {
-    return this.scale(1 / this.length());
-  };
-
   function Matrix3(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
     if (m00 === undefined) {
       this.m00 = 0; this.m01 = 0; this.m02 = 0;
@@ -149,73 +149,20 @@
     }
   }
 
-  Matrix3.prototype.clone = function () {
-    return new Matrix3(
-        this.m00, this.m01, this.m02,
-        this.m10, this.m11, this.m12,
-        this.m20, this.m21, this.m22);
-  };
-
-  Matrix3.prototype.toString = function () {
-    return "[[" + this.m00 + "," + this.m01 + "," + this.m02
-      + "],[" + this.m10 + "," + this.m11 + "," + this.m12
-      + "],[" + this.m20 + "," + this.m21 + "," + this.m22 + "]]";
-  };
-
-  Matrix3.prototype.determinant = function () {
+  Matrix3.prototype.invert = function () {
     var m00 = this.m00; var m01 = this.m01; var m02 = this.m02;
     var m10 = this.m10; var m11 = this.m11; var m12 = this.m12;
     var m20 = this.m20; var m21 = this.m21; var m22 = this.m22;
-    return m00 * (m11 * m22 - m21 * m12)
-        - m01 * (m10 * m22 - m20 * m12)
-        + m02 * (m10 * m21 - m20 * m11);
-  };
-
-  Matrix3.prototype.equals = function (that) {
-    return this.m00 === that.m00 && this.m01 === that.m01 && this.m02 === that.m02
-      && this.m10 === that.m10 && this.m11 === that.m11 && this.m12 === that.m12
-      && this.m20 === that.m20 && this.m21 === that.m21 && this.m22 === that.m22;
-  };
-
-  Matrix3.prototype.epsilon_equals = function (that, epsilon) {
-    return Math.abs(this.m00 - that.m00) <= epsilon
-      && Math.abs(this.m01 - that.m01) <= epsilon
-      && Math.abs(this.m02 - that.m02) <= epsilon
-      && Math.abs(this.m10 - that.m10) <= epsilon
-      && Math.abs(this.m11 - that.m11) <= epsilon
-      && Math.abs(this.m12 - that.m12) <= epsilon
-      && Math.abs(this.m20 - that.m20) <= epsilon
-      && Math.abs(this.m21 - that.m21) <= epsilon
-      && Math.abs(this.m22 - that.m22) <= epsilon;
-  };
-
-  Matrix3.prototype.transform = function (that, result) {
-    var x = that.x; var y = that.y; var z = that.z;
-    if (!result) {
-      result = that;
-    }
-    if (z) {
-      result.x = this.m00 * x + this.m01 * y + this.m02 * z;
-      result.y = this.m10 * x + this.m11 * y + this.m12 * z;
-      result.z = this.m20 * x + this.m21 * y + this.m22 * z;
-    } else {
-      result.x = this.m00 * x + this.m01 * y + this.m02;
-      result.y = this.m10 * x + this.m11 * y + this.m12;
-    }
-    return result;
-  };
-
-  Matrix3.prototype.set_identity = function () {
-    this.m00 = 1; this.m01 = 0; this.m02 = 0;
-    this.m10 = 0; this.m11 = 1; this.m12 = 0;
-    this.m20 = 0; this.m21 = 0; this.m22 = 1;
-    return this;
-  };
-
-  Matrix3.prototype.set_zero = function () {
-    this.m00 = 0; this.m01 = 0; this.m02 = 0;
-    this.m10 = 0; this.m11 = 0; this.m12 = 0;
-    this.m20 = 0; this.m21 = 0; this.m22 = 0;
+    var d = this.determinant();
+    this.m00 = (m11 * m22 - m12 * m21) / d;
+    this.m01 = (m02 * m21 - m01 * m22) / d;
+    this.m02 = (m01 * m12 - m02 * m11) / d;
+    this.m10 = (m12 * m20 - m10 * m22) / d;
+    this.m11 = (m00 * m22 - m02 * m20) / d;
+    this.m12 = (m02 * m10 - m00 * m12) / d;
+    this.m20 = (m10 * m21 - m11 * m20) / d;
+    this.m21 = (m01 * m20 - m00 * m21) / d;
+    this.m22 = (m00 * m11 - m01 * m10) / d;
     return this;
   };
 
@@ -233,20 +180,17 @@
     return this;
   };
 
-  Matrix3.prototype.invert = function () {
-    var m00 = this.m00; var m01 = this.m01; var m02 = this.m02;
-    var m10 = this.m10; var m11 = this.m11; var m12 = this.m12;
-    var m20 = this.m20; var m21 = this.m21; var m22 = this.m22;
-    var d = this.determinant();
-    this.m00 = (m11 * m22 - m12 * m21) / d;
-    this.m01 = (m02 * m21 - m01 * m22) / d;
-    this.m02 = (m01 * m12 - m02 * m11) / d;
-    this.m10 = (m12 * m20 - m10 * m22) / d;
-    this.m11 = (m00 * m22 - m02 * m20) / d;
-    this.m12 = (m02 * m10 - m00 * m12) / d;
-    this.m20 = (m10 * m21 - m11 * m20) / d;
-    this.m21 = (m01 * m20 - m00 * m21) / d;
-    this.m22 = (m00 * m11 - m01 * m10) / d;
+  Matrix3.prototype.set_identity = function () {
+    this.m00 = 1; this.m01 = 0; this.m02 = 0;
+    this.m10 = 0; this.m11 = 1; this.m12 = 0;
+    this.m20 = 0; this.m21 = 0; this.m22 = 1;
+    return this;
+  };
+
+  Matrix3.prototype.set_zero = function () {
+    this.m00 = 0; this.m01 = 0; this.m02 = 0;
+    this.m10 = 0; this.m11 = 0; this.m12 = 0;
+    this.m20 = 0; this.m21 = 0; this.m22 = 0;
     return this;
   };
 
@@ -330,6 +274,62 @@
     this.m10 = s; this.m11 =  c; this.m12 = 0;
     this.m20 = 0; this.m21 =  0; this.m22 = 1;
     return this;
+  };
+
+  Matrix3.prototype.clone = function () {
+    return new Matrix3(
+        this.m00, this.m01, this.m02,
+        this.m10, this.m11, this.m12,
+        this.m20, this.m21, this.m22);
+  };
+
+  Matrix3.prototype.toString = function () {
+    return "[[" + this.m00 + "," + this.m01 + "," + this.m02
+      + "],[" + this.m10 + "," + this.m11 + "," + this.m12
+      + "],[" + this.m20 + "," + this.m21 + "," + this.m22 + "]]";
+  };
+
+  Matrix3.prototype.equals = function (that) {
+    return this.m00 === that.m00 && this.m01 === that.m01 && this.m02 === that.m02
+      && this.m10 === that.m10 && this.m11 === that.m11 && this.m12 === that.m12
+      && this.m20 === that.m20 && this.m21 === that.m21 && this.m22 === that.m22;
+  };
+
+  Matrix3.prototype.epsilon_equals = function (that, epsilon) {
+    return Math.abs(this.m00 - that.m00) <= epsilon
+      && Math.abs(this.m01 - that.m01) <= epsilon
+      && Math.abs(this.m02 - that.m02) <= epsilon
+      && Math.abs(this.m10 - that.m10) <= epsilon
+      && Math.abs(this.m11 - that.m11) <= epsilon
+      && Math.abs(this.m12 - that.m12) <= epsilon
+      && Math.abs(this.m20 - that.m20) <= epsilon
+      && Math.abs(this.m21 - that.m21) <= epsilon
+      && Math.abs(this.m22 - that.m22) <= epsilon;
+  };
+
+  Matrix3.prototype.determinant = function () {
+    var m00 = this.m00; var m01 = this.m01; var m02 = this.m02;
+    var m10 = this.m10; var m11 = this.m11; var m12 = this.m12;
+    var m20 = this.m20; var m21 = this.m21; var m22 = this.m22;
+    return m00 * (m11 * m22 - m21 * m12)
+        - m01 * (m10 * m22 - m20 * m12)
+        + m02 * (m10 * m21 - m20 * m11);
+  };
+
+  Matrix3.prototype.transform = function (that, result) {
+    var x = that.x; var y = that.y; var z = that.z;
+    if (!result) {
+      result = that;
+    }
+    if (z) {
+      result.x = this.m00 * x + this.m01 * y + this.m02 * z;
+      result.y = this.m10 * x + this.m11 * y + this.m12 * z;
+      result.z = this.m20 * x + this.m21 * y + this.m22 * z;
+    } else {
+      result.x = this.m00 * x + this.m01 * y + this.m02;
+      result.y = this.m10 * x + this.m11 * y + this.m12;
+    }
+    return result;
   };
 
   if (!root.dromozoa) {
