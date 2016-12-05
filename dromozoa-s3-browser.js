@@ -100,6 +100,41 @@
     return result;
   }
 
+  function path_to_info(path) {
+    var result = {
+      name: basename(path),
+      type: "file",
+      icon: "fa-file-o"
+    };
+    $.each(path_to_info.definitions, function (i, def) {
+      unused(i);
+      if (def.regexp.exec(path)) {
+        if (def.type) {
+          result.type = def.type;
+        }
+        result.icon = def.icon;
+        return false;
+      }
+    });
+    return result;
+  }
+
+  path_to_info.definitions = [
+    {
+      regexp: /\/$/,
+      type: "folder",
+      icon: "fa-folder-o"
+    },
+    {
+      regexp: /\.(?:gif|jpeg|jpg|jpe|png)/i,
+      icon: "fa-file-image-o"
+    },
+    {
+      regexp: /\.(?:mp4|mp4v|mpg4)/i,
+      icon: "fa-file-video-o"
+    }
+  ];
+
   function key_to_path(key) {
     assert(!key.startsWith("/"));
     return "/" + key;
@@ -107,6 +142,10 @@
 
   function key_to_segments(key) {
     return path_to_segments(key_to_path(key));
+  }
+
+  function key_to_info(key) {
+    return path_to_info(key_to_path(key));
   }
 
   function format_int(fill, width, value) {
@@ -428,36 +467,27 @@
 
     function create_tr(item) {
       var key = item.key;
-      var name = basename(key_to_path(key));
-      var icon;
+      var info = key_to_info(key);
       var uri;
-      var data = { name: name };
-      if (key.endsWith("/")) {
-        icon = "fa-folder-o";
+      var data = { name: info.name };
+      if (info.type === "folder") {
         uri = get_uri().addQuery("prefix", key);
-        data.type = "0:" + name;
+        data.type = "0:" + info.name;
         data.mtime = -1;
         data.size = -1;
       } else {
-        if (/\.(?:gif|jpeg|jpg|jpe|png)$/i.exec(key)) {
-          icon = "fa-file-image-o";
-        } else if (/\.(?:mp4|mp4v|mpg4)$/i.exec(key)) {
-          icon = "fa-file-video-o";
-        } else {
-          icon = "fa-file-o";
-        }
         uri = get_origin_uri().path(key_to_path(key));
-        data.type = "1:" + name;
+        data.type = "1:" + info.name;
         data.mtime = item.last_modified.getTime();
         data.size = item.size;
       }
       return $("<tr>")
         .append($("<td>")
           .append($("<span>")
-            .addClass("fa fa-fw " + icon))
+            .addClass("fa fa-fw " + info.icon))
           .append($("<a>")
             .attr("href", uri.toString())
-            .text(name)))
+            .text(info.name)))
         .append($("<td>")
           .addClass("hidden-xs")
           .text(format_date(item.last_modified)))
