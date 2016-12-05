@@ -335,7 +335,7 @@
 
       var $thead = $(".dromozoa-s3-browser-list thead");
       $thead.find("th").data("sort_state", -1);
-      $thead.find(".fa").attr("class", "fa");
+      $thead.find(".fa").attr("class", "fa fa-fw");
 
       $th.data("sort_state", state);
       $th.find(".fa").addClass(def.icon);
@@ -401,9 +401,7 @@
                 .text("Name")
                 .on("click", sort_by("name")))
               .append($("<span>")
-                .text(" "))
-              .append($("<span>")
-                .addClass("fa"))
+                .addClass("fa fa-fw"))
               .data("sort_state", -1))
             .append($("<th>")
               .addClass("hidden-xs sort-by-mtime")
@@ -413,9 +411,7 @@
                 .text("Last Modified")
                 .on("click", sort_by("mtime")))
               .append($("<span>")
-                .text(" "))
-              .append($("<span>")
-                .addClass("fa"))
+                .addClass("fa fa-fw"))
               .data("sort_state", -1))
             .append($("<th>")
               .addClass("sort-by-size")
@@ -425,9 +421,7 @@
                 .text("Size")
                 .on("click", sort_by("size")))
               .append($("<span>")
-                .text(" "))
-              .append($("<span>")
-                .addClass("fa"))
+                .addClass("fa fa-fw"))
               .data("sort_state", -1))))
         .append($("<tbody>"));
     }
@@ -460,9 +454,7 @@
       return $("<tr>")
         .append($("<td>")
           .append($("<span>")
-            .addClass("fa " + icon))
-          .append($("<span>")
-            .text(" "))
+            .addClass("fa fa-fw " + icon))
           .append($("<a>")
             .attr("href", uri.toString())
             .text(name)))
