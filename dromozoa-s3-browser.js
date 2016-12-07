@@ -24,7 +24,12 @@
   var d3 = root.d3;
 
   function error(message) {
-    root.alert(message);
+    if (root.alert) {
+      root.alert(message);
+    }
+    if (root.console && root.console.error) {
+      root.console.error(message);
+    }
     throw new root.Error(message);
   }
 
@@ -147,6 +152,18 @@
   function key_to_info(key) {
     return path_to_info(key_to_path(key));
   }
+
+  function icon_to_code(icon) {
+    return assert(icon_to_code.definitions[icon]);
+  }
+
+  icon_to_code.definitions = {
+    "fa-folder-o": "\uf114",
+    "fa-folder-open-o": "\uf115",
+    "fa-file-o": "\uf016",
+    "fa-file-image-o": "\uf1c5",
+    "fa-file-video-o": "\uf1c8"
+  };
 
   function format_int(fill, width, value) {
     var result = value.toString();
@@ -346,11 +363,7 @@
       .append("<div>")
         .addClass("dromozoa-s3-browser")
         .append(create_navbar());
-    var impl = module[get_mode()];
-    if (impl) {
-      return impl();
-    }
-    error("invalid mode");
+    return assert(module[get_mode()])();
   }
 
   module.list = function () {
@@ -540,9 +553,11 @@
     key_to_identifier.map = {};
     key_to_identifier.count = 0;
 
+    var load;
+    var update;
+
     function append_node(group, d) {
-      var key = d.data.key;
-      var info = key_to_info(key);
+      var info = key_to_info(d.data.key);
       group
         .append("circle")
           .attr("stroke", "grey")
@@ -568,16 +583,13 @@
         .attr("text-anchor", "middle")
         .style("font-family", "FontAwesome")
         .style("font-size", "64px")
-        .text("icon_code");
+        .text(icon_to_code(info.icon))
       group
         .append("text")
         .attr("y", 70)
         .attr("text-anchor", "middle")
         .text(info.name);
     }
-
-    var load;
-    var update;
 
     load = function (prefix) {
       list_bucket(get_origin_uri(), prefix).done(function (result) {
