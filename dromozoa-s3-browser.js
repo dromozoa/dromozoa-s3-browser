@@ -540,6 +540,42 @@
     key_to_identifier.map = {};
     key_to_identifier.count = 0;
 
+    function append_node(group, d) {
+      var key = d.data.key;
+      var info = key_to_info(key);
+      group
+        .append("circle")
+          .attr("stroke", "grey")
+          .attr("stroke-width", 4)
+          .attr("fill", "white")
+          .attr("r", 50)
+          .on("click", function (d) {
+            var key = d.data.key;
+            if (key.endsWith("/")) {
+              if (data[key]) {
+                data[key] = undefined;
+                update();
+              } else {
+                load(key);
+              }
+            }
+          });
+      group
+        .append("text")
+        .attr("fill", "grey")
+        // .attr("stroke", "white")
+        .attr("y", 0)
+        .attr("text-anchor", "middle")
+        .style("font-family", "FontAwesome")
+        .style("font-size", "64px")
+        .text("icon_code");
+      group
+        .append("text")
+        .attr("y", 70)
+        .attr("text-anchor", "middle")
+        .text(info.name);
+    }
+
     var load;
     var update;
 
@@ -582,26 +618,7 @@
             }
           })
           .each(function (d) {
-            var group = d3.select(this);
-            group
-              .append("circle")
-                .attr("r", 50)
-                .on("click", function (d) {
-                  var key = d.data.key;
-                  if (key.endsWith("/")) {
-                    if (data[key]) {
-                      data[key] = undefined;
-                      update();
-                    } else {
-                      load(key);
-                    }
-                  }
-                });
-            group
-              .append("text")
-              .attr("y", 70)
-              .attr("text-anchor", "middle")
-              .text(basename(key_to_path(d.data.key)));
+            append_node(d3.select(this), d);
           });
 
       nodes.exit().attr("class", "removing");
