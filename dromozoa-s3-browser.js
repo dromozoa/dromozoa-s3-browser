@@ -583,7 +583,7 @@
         .attr("text-anchor", "middle")
         .style("font-family", "FontAwesome")
         .style("font-size", "64px")
-        .text(icon_to_code(info.icon))
+        .text(icon_to_code(info.icon));
       group
         .append("text")
         .attr("y", 70)
