@@ -22,8 +22,8 @@
   var $ = root.jQuery;
   var unused = $.noop;
   var d3 = root.d3;
-  var vecmath = root.dromozoa.vecmath;
-  var Vector2 = vecmath.Vector2;
+  // var vecmath = root.dromozoa.vecmath;
+  // var Vector2 = vecmath.Vector2;
 
   function error(message) {
     if (root.alert) {
@@ -601,24 +601,18 @@
     function layout(root_node) {
       var position = 0;
       root_node.eachBefore(function (node) {
-        console.log(node.depth, position, node.data.key);
+        root.console.log(node.depth, position, node.data.key);
         node.position = position;
         position += 1;
       });
     }
 
     update = function () {
-      var width = root.parseInt(svg.attr("width"), 10);
-      var height = root.parseInt(svg.attr("height"), 10);
-
       var tree_root = d3.hierarchy({ key: get_prefix() }, function (d) {
         return data[d.key];
       });
 
       layout(tree_root);
-
-      // tree.nodeSize([ 40, 80 ]);
-      // tree(tree_root);
 
       var nodes = svg.select(".model")
         .selectAll(".node")
@@ -629,12 +623,6 @@
       nodes.enter()
         .append("g")
           .attr("class", "node")
-          // .attr("transform", function (d) {
-          //   var ancestors = d.ancestors();
-          //   if (ancestors[1]) {
-          //     return "translate(" + ancestors[1].y + "," + ancestors[1].x + ")";
-          //   }
-          // })
           .each(function (d) {
             create_node(d3.select(this), d);
           });
