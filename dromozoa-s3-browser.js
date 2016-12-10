@@ -22,6 +22,8 @@
   var $ = root.jQuery;
   var unused = $.noop;
   var d3 = root.d3;
+  var vecmath = root.dromozoa.vecmath;
+  var Vector2 = vecmath.Vector2;
 
   function error(message) {
     if (root.alert) {
@@ -556,6 +558,56 @@
     var load;
     var update;
 
+    function update_node(group) {
+      var bbox = group.select("text").node().getBBox();
+      var h = bbox.height;
+      group
+        .select("rect")
+          .attr("x", bbox.x - h * 0.75)
+          .attr("y", bbox.y - h * 0.25)
+          .attr("width", bbox.width + h * 1.5)
+          .attr("height", bbox.height + h * 0.5)
+          .attr("rx", h * 0.75)
+          .attr("ry", h * 0.75);
+      bbox = group.node().getBBox();
+      console.log(bbox);
+      // group
+      //   .attr("dx", -bbox.width * 0.5);
+      //   .attr("dy", -bbox.height * 0.5);
+    }
+
+    function create_node(group, d) {
+      var info = key_to_info(d.data.key);
+      group
+        .on("mousedown", function (d) {
+          var key = d.data.key;
+          if (key.endsWith("/")) {
+            if (data[key]) {
+              data[key] = undefined;
+              update();
+            } else {
+              load(key);
+            }
+          }
+        })
+        .append("rect")
+          .attr("width", 16)
+          .attr("height", 16)
+          .attr("stroke", "red")
+          .attr("fill", "white");
+      var text = group
+        .append("text")
+          .attr("x", "0,1.28571429em"); // fa-fw
+      text
+        .append("tspan")
+          .style("font-family", "FontAwesome")
+          .text(icon_to_code(info.icon));
+      text
+        .append("tspan")
+          .text(info.name);
+      update_node(group);
+    }
+
     function append_node(group, d) {
       var info = key_to_info(d.data.key);
       group
@@ -563,7 +615,7 @@
           .attr("stroke", "grey")
           .attr("stroke-width", 4)
           .attr("fill", "white")
-          .attr("r", 50)
+          .attr("r", "84px")
           .on("click", function (d) {
             var key = d.data.key;
             if (key.endsWith("/")) {
@@ -578,11 +630,8 @@
       group
         .append("text")
         .attr("fill", "grey")
-        // .attr("stroke", "white")
-        .attr("y", 0)
-        .attr("text-anchor", "middle")
         .style("font-family", "FontAwesome")
-        .style("font-size", "64px")
+        .style("font-size", "128px")
         .text(icon_to_code(info.icon));
       group
         .append("text")
@@ -610,8 +659,7 @@
         return data[d.key];
       });
 
-      tree.size([ height, width ]);
-      tree.nodeSize([ 200, 400 ]);
+      tree.nodeSize([ 40, 80 ]);
       tree(tree_root);
 
       var nodes = svg.select(".model")
@@ -630,7 +678,7 @@
             }
           })
           .each(function (d) {
-            append_node(d3.select(this), d);
+            create_node(d3.select(this), d);
           });
 
       nodes.exit().attr("class", "removing");
@@ -644,6 +692,9 @@
         .remove();
 
       svg.selectAll(".node")
+        .each(function (d) {
+          update_node(d3.select(this), d);
+        })
         .transition(transition)
         .attr("transform", function (d) {
           return "translate(" + d.y + "," + d.x + ")";
