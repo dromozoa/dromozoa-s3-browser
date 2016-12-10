@@ -536,6 +536,8 @@
   };
 
   module.tree = function () {
+    var font_awesome_fixed_width = 10 / 7;
+
     var data = {};
     var svg;
 
@@ -576,7 +578,7 @@
           .attr("stroke", "black");
       var text = group
         .append("text")
-          .attr("x", "0,1.28571429em"); // fa-fw
+          .attr("x", "0," + font_awesome_fixed_width + "em");
       text
         .append("tspan")
           .style("font-family", "FontAwesome")
