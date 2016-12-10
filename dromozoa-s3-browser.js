@@ -22,9 +22,16 @@
   var $ = root.jQuery;
   var unused = $.noop;
   var d3 = root.d3;
+  var vecmath = root.dromozoa.vecmath;
+  var Vector2 = vecmath.Vector2;
 
   function error(message) {
-    root.alert(message);
+    if (root.alert) {
+      root.alert(message);
+    }
+    if (root.console && root.console.error) {
+      root.console.error(message);
+    }
     throw new root.Error(message);
   }
 
@@ -100,6 +107,41 @@
     return result;
   }
 
+  function path_to_info(path) {
+    var result = {
+      name: basename(path),
+      type: "file",
+      icon: "fa-file-o"
+    };
+    $.each(path_to_info.definitions, function (i, def) {
+      unused(i);
+      if (def.regexp.exec(path)) {
+        if (def.type) {
+          result.type = def.type;
+        }
+        result.icon = def.icon;
+        return false;
+      }
+    });
+    return result;
+  }
+
+  path_to_info.definitions = [
+    {
+      regexp: /\/$/,
+      type: "folder",
+      icon: "fa-folder-o"
+    },
+    {
+      regexp: /\.(?:gif|jpeg|jpg|jpe|png)/i,
+      icon: "fa-file-image-o"
+    },
+    {
+      regexp: /\.(?:mp4|mp4v|mpg4)/i,
+      icon: "fa-file-video-o"
+    }
+  ];
+
   function key_to_path(key) {
     assert(!key.startsWith("/"));
     return "/" + key;
@@ -108,6 +150,22 @@
   function key_to_segments(key) {
     return path_to_segments(key_to_path(key));
   }
+
+  function key_to_info(key) {
+    return path_to_info(key_to_path(key));
+  }
+
+  function icon_to_code(icon) {
+    return assert(icon_to_code.definitions[icon]);
+  }
+
+  icon_to_code.definitions = {
+    "fa-folder-o": "\uf114",
+    "fa-folder-open-o": "\uf115",
+    "fa-file-o": "\uf016",
+    "fa-file-image-o": "\uf1c5",
+    "fa-file-video-o": "\uf1c8"
+  };
 
   function format_int(fill, width, value) {
     var result = value.toString();
@@ -307,11 +365,7 @@
       .append("<div>")
         .addClass("dromozoa-s3-browser")
         .append(create_navbar());
-    var impl = module[get_mode()];
-    if (impl) {
-      return impl();
-    }
-    error("invalid mode");
+    return assert(module[get_mode()])();
   }
 
   module.list = function () {
@@ -335,7 +389,7 @@
 
       var $thead = $(".dromozoa-s3-browser-list thead");
       $thead.find("th").data("sort_state", -1);
-      $thead.find(".fa").attr("class", "fa");
+      $thead.find(".fa").attr("class", "fa fa-fw");
 
       $th.data("sort_state", state);
       $th.find(".fa").addClass(def.icon);
@@ -401,9 +455,7 @@
                 .text("Name")
                 .on("click", sort_by("name")))
               .append($("<span>")
-                .text(" "))
-              .append($("<span>")
-                .addClass("fa"))
+                .addClass("fa fa-fw"))
               .data("sort_state", -1))
             .append($("<th>")
               .addClass("hidden-xs sort-by-mtime")
@@ -413,9 +465,7 @@
                 .text("Last Modified")
                 .on("click", sort_by("mtime")))
               .append($("<span>")
-                .text(" "))
-              .append($("<span>")
-                .addClass("fa"))
+                .addClass("fa fa-fw"))
               .data("sort_state", -1))
             .append($("<th>")
               .addClass("sort-by-size")
@@ -425,47 +475,34 @@
                 .text("Size")
                 .on("click", sort_by("size")))
               .append($("<span>")
-                .text(" "))
-              .append($("<span>")
-                .addClass("fa"))
+                .addClass("fa fa-fw"))
               .data("sort_state", -1))))
         .append($("<tbody>"));
     }
 
     function create_tr(item) {
       var key = item.key;
-      var name = basename(key_to_path(key));
-      var icon;
+      var info = key_to_info(key);
       var uri;
-      var data = { name: name };
-      if (key.endsWith("/")) {
-        icon = "fa-folder-o";
+      var data = { name: info.name };
+      if (info.type === "folder") {
         uri = get_uri().addQuery("prefix", key);
-        data.type = "0:" + name;
+        data.type = "0:" + info.name;
         data.mtime = -1;
         data.size = -1;
       } else {
-        if (/\.(?:gif|jpeg|jpg|jpe|png)$/i.exec(key)) {
-          icon = "fa-file-image-o";
-        } else if (/\.(?:mp4|mp4v|mpg4)$/i.exec(key)) {
-          icon = "fa-file-video-o";
-        } else {
-          icon = "fa-file-o";
-        }
         uri = get_origin_uri().path(key_to_path(key));
-        data.type = "1:" + name;
+        data.type = "1:" + info.name;
         data.mtime = item.last_modified.getTime();
         data.size = item.size;
       }
       return $("<tr>")
         .append($("<td>")
           .append($("<span>")
-            .addClass("fa " + icon))
-          .append($("<span>")
-            .text(" "))
+            .addClass("fa fa-fw " + info.icon))
           .append($("<a>")
             .attr("href", uri.toString())
-            .text(name)))
+            .text(info.name)))
         .append($("<td>")
           .addClass("hidden-xs")
           .text(format_date(item.last_modified)))
@@ -521,6 +558,88 @@
     var load;
     var update;
 
+    function update_node(group) {
+      var bbox = group.select("text").node().getBBox();
+      var h = bbox.height;
+      group
+        .select("rect")
+          .attr("x", bbox.x - h * 0.75)
+          .attr("y", bbox.y - h * 0.25)
+          .attr("width", bbox.width + h * 1.5)
+          .attr("height", bbox.height + h * 0.5)
+          .attr("rx", h * 0.75)
+          .attr("ry", h * 0.75);
+      bbox = group.node().getBBox();
+      console.log(bbox);
+      // group
+      //   .attr("dx", -bbox.width * 0.5);
+      //   .attr("dy", -bbox.height * 0.5);
+    }
+
+    function create_node(group, d) {
+      var info = key_to_info(d.data.key);
+      group
+        .on("mousedown", function (d) {
+          var key = d.data.key;
+          if (key.endsWith("/")) {
+            if (data[key]) {
+              data[key] = undefined;
+              update();
+            } else {
+              load(key);
+            }
+          }
+        })
+        .append("rect")
+          .attr("width", 16)
+          .attr("height", 16)
+          .attr("stroke", "red")
+          .attr("fill", "white");
+      var text = group
+        .append("text")
+          .attr("x", "0,1.28571429em"); // fa-fw
+      text
+        .append("tspan")
+          .style("font-family", "FontAwesome")
+          .text(icon_to_code(info.icon));
+      text
+        .append("tspan")
+          .text(info.name);
+      update_node(group);
+    }
+
+    function append_node(group, d) {
+      var info = key_to_info(d.data.key);
+      group
+        .append("circle")
+          .attr("stroke", "grey")
+          .attr("stroke-width", 4)
+          .attr("fill", "white")
+          .attr("r", "84px")
+          .on("click", function (d) {
+            var key = d.data.key;
+            if (key.endsWith("/")) {
+              if (data[key]) {
+                data[key] = undefined;
+                update();
+              } else {
+                load(key);
+              }
+            }
+          });
+      group
+        .append("text")
+        .attr("fill", "grey")
+        .style("font-family", "FontAwesome")
+        .style("font-size", "128px")
+        .text(icon_to_code(info.icon));
+      group
+        .append("text")
+        .attr("y", 70)
+        .attr("text-anchor", "middle")
+        .text(info.name);
+    }
+
     load = function (prefix) {
       list_bucket(get_origin_uri(), prefix).done(function (result) {
         data[result.prefix] = result.items.sort(function (a, b) {
@@ -540,8 +659,7 @@
         return data[d.key];
       });
 
-      tree.size([ height, width ]);
-      tree.nodeSize([ 200, 400 ]);
+      tree.nodeSize([ 40, 80 ]);
       tree(tree_root);
 
       var nodes = svg.select(".model")
@@ -560,26 +678,7 @@
             }
           })
           .each(function (d) {
-            var group = d3.select(this);
-            group
-              .append("circle")
-                .attr("r", 50)
-                .on("click", function (d) {
-                  var key = d.data.key;
-                  if (key.endsWith("/")) {
-                    if (data[key]) {
-                      data[key] = undefined;
-                      update();
-                    } else {
-                      load(key);
-                    }
-                  }
-                });
-            group
-              .append("text")
-              .attr("y", 70)
-              .attr("text-anchor", "middle")
-              .text(basename(key_to_path(d.data.key)));
+            create_node(d3.select(this), d);
           });
 
       nodes.exit().attr("class", "removing");
@@ -593,6 +692,9 @@
         .remove();
 
       svg.selectAll(".node")
+        .each(function (d) {
+          update_node(d3.select(this), d);
+        })
         .transition(transition)
         .attr("transform", function (d) {
           return "translate(" + d.y + "," + d.x + ")";
