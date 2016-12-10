@@ -536,24 +536,8 @@
   };
 
   module.tree = function () {
-    var tree = d3.tree();
     var data = {};
     var svg;
-
-    function key_to_identifier(key) {
-      var identifier = key_to_identifier.map[key];
-      if (identifier) {
-        return identifier;
-      }
-      var count = key_to_identifier.count + 1;
-      identifier = "dromozoa-s3-browser-tree-" + count;
-      key_to_identifier.map[key] = identifier;
-      key_to_identifier.count = count;
-      return identifier;
-    }
-
-    key_to_identifier.map = {};
-    key_to_identifier.count = 0;
 
     var load;
     var update;
@@ -569,17 +553,12 @@
           .attr("height", bbox.height + h * 0.5)
           .attr("rx", h * 0.75)
           .attr("ry", h * 0.75);
-      bbox = group.node().getBBox();
-      console.log(bbox);
-      // group
-      //   .attr("dx", -bbox.width * 0.5);
-      //   .attr("dy", -bbox.height * 0.5);
     }
 
     function create_node(group, d) {
       var info = key_to_info(d.data.key);
       group
-        .on("mousedown", function (d) {
+        .on("click", function (d) {
           var key = d.data.key;
           if (key.endsWith("/")) {
             if (data[key]) {
@@ -593,8 +572,8 @@
         .append("rect")
           .attr("width", 16)
           .attr("height", 16)
-          .attr("stroke", "red")
-          .attr("fill", "white");
+          .attr("fill", "white")
+          .attr("stroke", "black");
       var text = group
         .append("text")
           .attr("x", "0,1.28571429em"); // fa-fw
@@ -608,38 +587,6 @@
       update_node(group);
     }
 
-    function append_node(group, d) {
-      var info = key_to_info(d.data.key);
-      group
-        .append("circle")
-          .attr("stroke", "grey")
-          .attr("stroke-width", 4)
-          .attr("fill", "white")
-          .attr("r", "84px")
-          .on("click", function (d) {
-            var key = d.data.key;
-            if (key.endsWith("/")) {
-              if (data[key]) {
-                data[key] = undefined;
-                update();
-              } else {
-                load(key);
-              }
-            }
-          });
-      group
-        .append("text")
-        .attr("fill", "grey")
-        .style("font-family", "FontAwesome")
-        .style("font-size", "128px")
-        .text(icon_to_code(info.icon));
-      group
-        .append("text")
-        .attr("y", 70)
-        .attr("text-anchor", "middle")
-        .text(info.name);
-    }
-
     load = function (prefix) {
       list_bucket(get_origin_uri(), prefix).done(function (result) {
         data[result.prefix] = result.items.sort(function (a, b) {
@@ -651,6 +598,15 @@
       });
     };
 
+    function layout(root_node) {
+      var position = 0;
+      root_node.eachBefore(function (node) {
+        console.log(node.depth, position, node.data.key);
+        node.position = position;
+        position += 1;
+      });
+    }
+
     update = function () {
       var width = root.parseInt(svg.attr("width"), 10);
       var height = root.parseInt(svg.attr("height"), 10);
@@ -659,8 +615,10 @@
         return data[d.key];
       });
 
-      tree.nodeSize([ 40, 80 ]);
-      tree(tree_root);
+      layout(tree_root);
+
+      // tree.nodeSize([ 40, 80 ]);
+      // tree(tree_root);
 
       var nodes = svg.select(".model")
         .selectAll(".node")
@@ -671,12 +629,12 @@
       nodes.enter()
         .append("g")
           .attr("class", "node")
-          .attr("transform", function (d) {
-            var ancestors = d.ancestors();
-            if (ancestors[1]) {
-              return "translate(" + ancestors[1].y + "," + ancestors[1].x + ")";
-            }
-          })
+          // .attr("transform", function (d) {
+          //   var ancestors = d.ancestors();
+          //   if (ancestors[1]) {
+          //     return "translate(" + ancestors[1].y + "," + ancestors[1].x + ")";
+          //   }
+          // })
           .each(function (d) {
             create_node(d3.select(this), d);
           });
@@ -697,7 +655,7 @@
         })
         .transition(transition)
         .attr("transform", function (d) {
-          return "translate(" + d.y + "," + d.x + ")";
+          return "translate(" + d.depth * 40 + "," + d.position * 40 + ")";
         });
     };
 
