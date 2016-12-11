@@ -537,6 +537,7 @@
 
   module.tree = function () {
     var font_awesome_fixed_width = 10 / 7;
+    // var basic_unit = 18;
 
     var data = {};
     var svg;
@@ -583,9 +584,17 @@
         .append("tspan")
           .style("font-family", "FontAwesome")
           .text(icon_to_code(info.icon));
-      text
-        .append("tspan")
-          .text(info.name);
+      if (info.type === "folder") {
+        text
+          .append("tspan")
+            .text(info.name);
+      } else {
+        text
+          .append("tspan")
+            .append("a")
+              .attr("xlink:href", get_origin_uri().path(key_to_path(d.data.key)))
+              .text(info.name);
+      }
       update_node(group);
     }
 
