@@ -537,7 +537,7 @@
 
   module.tree = function () {
     var font_awesome_fixed_width = 10 / 7;
-    // var basic_unit = 18;
+    // var unit = 18;
 
     var data = {};
     var svg;
