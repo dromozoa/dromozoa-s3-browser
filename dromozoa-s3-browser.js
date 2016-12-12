@@ -537,7 +537,8 @@
 
   module.tree = function () {
     var font_awesome_fixed_width = 10 / 7;
-    // var unit = 18;
+    // var font_size = 14px;
+    var unit = 16;
 
     var data = {};
     var svg;
@@ -545,17 +546,27 @@
     var load;
     var update;
 
+    /*
+      g.node
+        rect
+        g.content
+          g.icon
+            text.icon
+          g.name
+            text.name
+              a
+    */
+
     function update_node(group) {
-      var bbox = group.select("text").node().getBBox();
-      var h = bbox.height;
+      var bbox = group.select(".content").node().getBBox();
       group
         .select("rect")
-          .attr("x", bbox.x - h * 0.75)
-          .attr("y", bbox.y - h * 0.25)
-          .attr("width", bbox.width + h * 1.5)
-          .attr("height", bbox.height + h * 0.5)
-          .attr("rx", h * 0.75)
-          .attr("ry", h * 0.75);
+          .attr("x", bbox.x - unit * 0.75)
+          .attr("y", bbox.y - unit * 0.25)
+          .attr("width", bbox.width + unit * 1.5)
+          .attr("height", unit * 1.5)
+          .attr("rx", unit * 0.75)
+          .attr("ry", unit * 0.75);
     }
 
     function create_node(group, d) {
@@ -573,27 +584,30 @@
           }
         })
         .append("rect")
-          .attr("width", 16)
-          .attr("height", 16)
           .attr("fill", "white")
           .attr("stroke", "black");
-      var text = group
-        .append("text")
-          .attr("x", "0," + font_awesome_fixed_width + "em");
-      text
-        .append("tspan")
-          .style("font-family", "FontAwesome")
-          .text(icon_to_code(info.icon));
+      var content_group = group
+        .append("g")
+          .classed("content", true);
+      content_group
+        .append("g")
+          .classed("icon", true)
+          .append("text")
+            .style("font-family", "FontAwesome")
+            .text(icon_to_code(info.icon));
+      var name_text = content_group
+        .append("g")
+          .classed("name", true)
+          .append("text")
+            .attr("x", font_awesome_fixed_width + "em");
       if (info.type === "folder") {
-        text
-          .append("tspan")
-            .text(info.name);
+        name_text
+          .text(info.name);
       } else {
-        text
-          .append("tspan")
-            .append("a")
-              .attr("xlink:href", get_origin_uri().path(key_to_path(d.data.key)))
-              .text(info.name);
+        name_text
+          .append("a")
+            .attr("xlink:href", get_origin_uri().path(key_to_path(d.data.key)))
+            .text(info.name);
       }
       update_node(group);
     }
@@ -612,7 +626,6 @@
     function layout(root_node) {
       var position = 0;
       root_node.eachBefore(function (node) {
-        root.console.log(node.depth, position, node.data.key);
         node.position = position;
         position += 1;
       });
@@ -700,6 +713,12 @@
           .attr("class", "model");
 
     resize();
+    // root.setTimeout(function () {
+    //   console.log("resize");
+    //   svg.selectAll(".node").each(function (d) {
+    //     update_node(d3.select(this), d);
+    //   });
+    // }, 500);
   };
 
   if (!root.dromozoa) {
