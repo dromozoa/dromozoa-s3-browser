@@ -22,8 +22,8 @@
   var $ = root.jQuery;
   var unused = $.noop;
   var d3 = root.d3;
-  var vecmath = root.dromozoa.vecmath;
-  var Vector2 = vecmath.Vector2;
+  // var vecmath = root.dromozoa.vecmath;
+  // var Vector2 = vecmath.Vector2;
 
   function error(message) {
     if (root.alert) {
@@ -164,7 +164,8 @@
     "fa-folder-open-o": "\uf115",
     "fa-file-o": "\uf016",
     "fa-file-image-o": "\uf1c5",
-    "fa-file-video-o": "\uf1c8"
+    "fa-file-video-o": "\uf1c8",
+    "fa-spinner": "\uf110"
   };
 
   function format_int(fill, width, value) {
@@ -536,50 +537,43 @@
   };
 
   module.tree = function () {
-    var tree = d3.tree();
+    var font_awesome_fixed_width = 10 / 7;
+    // var font_size = 14px;
+    var unit = 16;
+
     var data = {};
     var svg;
-
-    function key_to_identifier(key) {
-      var identifier = key_to_identifier.map[key];
-      if (identifier) {
-        return identifier;
-      }
-      var count = key_to_identifier.count + 1;
-      identifier = "dromozoa-s3-browser-tree-" + count;
-      key_to_identifier.map[key] = identifier;
-      key_to_identifier.count = count;
-      return identifier;
-    }
-
-    key_to_identifier.map = {};
-    key_to_identifier.count = 0;
 
     var load;
     var update;
 
+    /*
+      g.node
+        rect
+        g.content
+          g.icon
+            text.icon
+          g.name
+            text.name
+              a
+    */
+
     function update_node(group) {
-      var bbox = group.select("text").node().getBBox();
-      var h = bbox.height;
+      var bbox = group.select(".content").node().getBBox();
       group
         .select("rect")
-          .attr("x", bbox.x - h * 0.75)
-          .attr("y", bbox.y - h * 0.25)
-          .attr("width", bbox.width + h * 1.5)
-          .attr("height", bbox.height + h * 0.5)
-          .attr("rx", h * 0.75)
-          .attr("ry", h * 0.75);
-      bbox = group.node().getBBox();
-      console.log(bbox);
-      // group
-      //   .attr("dx", -bbox.width * 0.5);
-      //   .attr("dy", -bbox.height * 0.5);
+          .attr("x", bbox.x - unit * 0.75)
+          .attr("y", bbox.y - unit * 0.25)
+          .attr("width", bbox.width + unit * 1.5)
+          .attr("height", unit * 1.5)
+          .attr("rx", unit * 0.75)
+          .attr("ry", unit * 0.75);
     }
 
     function create_node(group, d) {
       var info = key_to_info(d.data.key);
       group
-        .on("mousedown", function (d) {
+        .on("click", function (d) {
           var key = d.data.key;
           if (key.endsWith("/")) {
             if (data[key]) {
@@ -588,56 +582,52 @@
             } else {
               load(key);
             }
+          } else {
+            d3.select(this).select(".icon text")
+              .text(icon_to_code("fa-spinner"));
+            var icon = d3.select(this).select(".icon");
+            var bbox = icon.node().getBBox();
+            var x = bbox.x + bbox.width * 0.5;
+            var y = bbox.y + bbox.height * 0.5;
+            d3.select(this).select(".icon")
+              .append("animateTransform")
+                .attr("attributeName", "transform")
+                .attr("type", "rotate")
+                .attr("from", "0 " + x + " " + y)
+                .attr("to", "360 " + x + " " + y)
+                .attr("dur", "2s")
+                .attr("repeatDur", "indefinite");
           }
         })
         .append("rect")
-          .attr("width", 16)
-          .attr("height", 16)
-          .attr("stroke", "red")
-          .attr("fill", "white");
-      var text = group
-        .append("text")
-          .attr("x", "0,1.28571429em"); // fa-fw
-      text
-        .append("tspan")
-          .style("font-family", "FontAwesome")
-          .text(icon_to_code(info.icon));
-      text
-        .append("tspan")
-          .text(info.name);
-      update_node(group);
-    }
-
-    function append_node(group, d) {
-      var info = key_to_info(d.data.key);
-      group
-        .append("circle")
-          .attr("stroke", "grey")
-          .attr("stroke-width", 4)
           .attr("fill", "white")
-          .attr("r", "84px")
-          .on("click", function (d) {
-            var key = d.data.key;
-            if (key.endsWith("/")) {
-              if (data[key]) {
-                data[key] = undefined;
-                update();
-              } else {
-                load(key);
-              }
-            }
-          });
-      group
-        .append("text")
-        .attr("fill", "grey")
-        .style("font-family", "FontAwesome")
-        .style("font-size", "128px")
-        .text(icon_to_code(info.icon));
-      group
-        .append("text")
-        .attr("y", 70)
-        .attr("text-anchor", "middle")
-        .text(info.name);
+          .attr("stroke", "black");
+      var content_group = group
+        .append("g")
+          .classed("content", true);
+      content_group
+        .append("g")
+          .classed("icon", true)
+          .append("text")
+            .attr("x", font_awesome_fixed_width * 0.5 + "em")
+            .style("font-family", "FontAwesome")
+            .style("text-anchor", "middle")
+            .text(icon_to_code(info.icon));
+      var name_text = content_group
+        .append("g")
+          .classed("name", true)
+          .append("text")
+            .attr("x", font_awesome_fixed_width + "em");
+      if (info.type === "folder") {
+        name_text
+          .text(info.name);
+      } else {
+        name_text
+          .append("a")
+            .attr("xlink:href", get_origin_uri().path(key_to_path(d.data.key)))
+            .text(info.name);
+      }
+      update_node(group);
     }
 
     load = function (prefix) {
@@ -651,16 +641,20 @@
       });
     };
 
-    update = function () {
-      var width = root.parseInt(svg.attr("width"), 10);
-      var height = root.parseInt(svg.attr("height"), 10);
+    function layout(root_node) {
+      var position = 0;
+      root_node.eachBefore(function (node) {
+        node.position = position;
+        position += 1;
+      });
+    }
 
+    update = function () {
       var tree_root = d3.hierarchy({ key: get_prefix() }, function (d) {
         return data[d.key];
       });
 
-      tree.nodeSize([ 40, 80 ]);
-      tree(tree_root);
+      layout(tree_root);
 
       var nodes = svg.select(".model")
         .selectAll(".node")
@@ -671,12 +665,6 @@
       nodes.enter()
         .append("g")
           .attr("class", "node")
-          .attr("transform", function (d) {
-            var ancestors = d.ancestors();
-            if (ancestors[1]) {
-              return "translate(" + ancestors[1].y + "," + ancestors[1].x + ")";
-            }
-          })
           .each(function (d) {
             create_node(d3.select(this), d);
           });
@@ -697,7 +685,7 @@
         })
         .transition(transition)
         .attr("transform", function (d) {
-          return "translate(" + d.y + "," + d.x + ")";
+          return "translate(" + d.depth * 40 + "," + d.position * 40 + ")";
         });
     };
 
@@ -743,6 +731,12 @@
           .attr("class", "model");
 
     resize();
+    // root.setTimeout(function () {
+    //   console.log("resize");
+    //   svg.selectAll(".node").each(function (d) {
+    //     update_node(d3.select(this), d);
+    //   });
+    // }, 500);
   };
 
   if (!root.dromozoa) {
