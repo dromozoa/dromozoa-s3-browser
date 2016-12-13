@@ -164,7 +164,8 @@
     "fa-folder-open-o": "\uf115",
     "fa-file-o": "\uf016",
     "fa-file-image-o": "\uf1c5",
-    "fa-file-video-o": "\uf1c8"
+    "fa-file-video-o": "\uf1c8",
+    "fa-spinner": "\uf110"
   };
 
   function format_int(fill, width, value) {
@@ -581,6 +582,21 @@
             } else {
               load(key);
             }
+          } else {
+            d3.select(this).select(".icon text")
+              .text(icon_to_code("fa-spinner"));
+            var icon = d3.select(this).select(".icon");
+            var bbox = icon.node().getBBox();
+            var x = bbox.x + bbox.width * 0.5;
+            var y = bbox.y + bbox.height * 0.5;
+            d3.select(this).select(".icon")
+              .append("animateTransform")
+                .attr("attributeName", "transform")
+                .attr("type", "rotate")
+                .attr("from", "0 " + x + " " + y)
+                .attr("to", "360 " + x + " " + y)
+                .attr("dur", "2s")
+                .attr("repeatDur", "indefinite");
           }
         })
         .append("rect")
@@ -593,7 +609,9 @@
         .append("g")
           .classed("icon", true)
           .append("text")
+            .attr("x", font_awesome_fixed_width * 0.5 + "em")
             .style("font-family", "FontAwesome")
+            .style("text-anchor", "middle")
             .text(icon_to_code(info.icon));
       var name_text = content_group
         .append("g")
