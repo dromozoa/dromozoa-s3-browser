@@ -547,17 +547,6 @@
     var load;
     var update;
 
-    /*
-      g.node
-        rect
-        g.content
-          g.icon
-            text.icon
-          g.name
-            text.name
-              a
-    */
-
     function update_node(group) {
       var bbox = group.select(".content").node().getBBox();
       group
@@ -614,10 +603,9 @@
             .style("text-anchor", "middle")
             .text(icon_to_code(info.icon));
       var name_text = content_group
-        .append("g")
+        .append("text")
           .classed("name", true)
-          .append("text")
-            .attr("x", font_awesome_fixed_width + "em");
+          .attr("x", font_awesome_fixed_width + "em");
       if (info.type === "folder") {
         name_text
           .text(info.name);
@@ -628,6 +616,27 @@
             .text(info.name);
       }
       update_node(group);
+    }
+
+    function create_grid(group) {
+      var i = 0;
+      while (i <= 40) {
+        group
+          .append("line")
+            .attr("x1", 0)
+            .attr("y1", unit * i)
+            .attr("x2", unit * 40)
+            .attr("y2", unit * i)
+            .style("stroke", "blue");
+        group
+          .append("line")
+            .attr("x1", unit * i)
+            .attr("y1", 0)
+            .attr("x2", unit * i)
+            .attr("y2", unit * 40)
+            .style("stroke", "blue");
+        i += 1;
+      }
     }
 
     load = function (prefix) {
@@ -685,7 +694,7 @@
         })
         .transition(transition)
         .attr("transform", function (d) {
-          return "translate(" + d.depth * 40 + "," + d.position * 40 + ")";
+          return "translate(" + d.depth * unit * 1.5 + "," + d.position * unit * 2.5 + ")";
         });
     };
 
@@ -729,6 +738,8 @@
         .attr("class", "view")
         .append("g")
           .attr("class", "model");
+
+    create_grid(svg.select(".model"));
 
     resize();
     // root.setTimeout(function () {
