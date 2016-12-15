@@ -201,7 +201,7 @@
           }
           return false;
         }
-        value = value / 1024;
+        value /= 1024;
       });
       return result;
     }
