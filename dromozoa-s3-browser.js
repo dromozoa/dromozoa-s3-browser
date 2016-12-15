@@ -540,6 +540,13 @@
     var font_awesome_fixed_width = 10 / 7;
     // var font_size = 14px;
     var unit = 16;
+    // unit = 40
+    // node_height = 24
+
+    var node_height = 24;
+    var node_radius = 12;
+    // var unit_width = 60;
+    // var unit_height = 40;
 
     var data = {};
     var svg;
@@ -551,12 +558,12 @@
       var bbox = group.select(".content").node().getBBox();
       group
         .select("rect")
-          .attr("x", bbox.x - unit * 0.75)
-          .attr("y", bbox.y - unit * 0.25)
-          .attr("width", bbox.width + unit * 1.5)
-          .attr("height", unit * 1.5)
-          .attr("rx", unit * 0.75)
-          .attr("ry", unit * 0.75);
+          .attr("x", bbox.x - node_radius)
+          .attr("y", bbox.y - (node_height - bbox.height) * 0.5)
+          .attr("width", bbox.width + node_radius * 2)
+          .attr("height", node_height)
+          .attr("rx", node_radius)
+          .attr("ry", node_radius);
     }
 
     function create_node(group, d) {
@@ -598,14 +605,13 @@
         .append("g")
           .classed("icon", true)
           .append("text")
-            .attr("x", font_awesome_fixed_width * 0.5 + "em")
             .style("font-family", "FontAwesome")
             .style("text-anchor", "middle")
             .text(icon_to_code(info.icon));
       var name_text = content_group
         .append("text")
           .classed("name", true)
-          .attr("x", font_awesome_fixed_width + "em");
+          .attr("x", font_awesome_fixed_width * 0.5 + "em");
       if (info.type === "folder") {
         name_text
           .text(info.name);
@@ -619,21 +625,23 @@
     }
 
     function create_grid(group) {
+      var u = 20;
+      var v = 40;
       var i = 0;
       while (i <= 40) {
         group
           .append("line")
             .attr("x1", 0)
-            .attr("y1", unit * i)
-            .attr("x2", unit * 40)
-            .attr("y2", unit * i)
+            .attr("y1", v * i)
+            .attr("x2", u * 40)
+            .attr("y2", v * i)
             .style("stroke", "blue");
         group
           .append("line")
-            .attr("x1", unit * i)
+            .attr("x1", u * i)
             .attr("y1", 0)
-            .attr("x2", unit * i)
-            .attr("y2", unit * 40)
+            .attr("x2", u * i)
+            .attr("y2", v * 40)
             .style("stroke", "blue");
         i += 1;
       }
