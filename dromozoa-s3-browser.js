@@ -537,16 +537,13 @@
   };
 
   module.tree = function () {
-    var font_awesome_fixed_width = 10 / 7;
-    // var font_size = 14px;
-    var unit = 16;
-    // unit = 40
-    // node_height = 24
-
+    var font_awesome_fixed_width_em = 10 / 7;
+    var name_x_em = font_awesome_fixed_width_em / 2;
+    var icon_width_em = 0.5 + name_x_em;
     var node_height = 24;
     var node_radius = 12;
-    // var unit_width = 60;
-    // var unit_height = 40;
+    var grid_x = 30;
+    var grid_y = 40;
 
     var data = {};
     var svg;
@@ -555,12 +552,13 @@
     var update;
 
     function update_node(group) {
-      var bbox = group.select(".content").node().getBBox();
+      var bbox = group.select(".name").node().getBBox();
+      var em = bbox.x / name_x_em;
       group
         .select("rect")
-          .attr("x", bbox.x - node_radius)
+          .attr("x", (name_x_em - icon_width_em) * em - node_radius)
           .attr("y", bbox.y - (node_height - bbox.height) * 0.5)
-          .attr("width", bbox.width + node_radius * 2)
+          .attr("width", bbox.width + bbox.x * 2 + node_radius * 2)
           .attr("height", node_height)
           .attr("rx", node_radius)
           .attr("ry", node_radius);
@@ -611,7 +609,7 @@
       var name_text = content_group
         .append("text")
           .classed("name", true)
-          .attr("x", font_awesome_fixed_width * 0.5 + "em");
+          .attr("x", name_x_em + "em");
       if (info.type === "folder") {
         name_text
           .text(info.name);
@@ -625,8 +623,8 @@
     }
 
     function create_grid(group) {
-      var u = 20;
-      var v = 40;
+      var u = grid_x;
+      var v = grid_y;
       var i = 0;
       while (i <= 40) {
         group
@@ -702,7 +700,7 @@
         })
         .transition(transition)
         .attr("transform", function (d) {
-          return "translate(" + d.depth * unit * 1.5 + "," + d.position * unit * 2.5 + ")";
+          return "translate(" + d.depth * grid_x + "," + d.position * grid_y + ")";
         });
     };
 
