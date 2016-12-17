@@ -563,7 +563,9 @@
         .attr("ry", node_radius);
     }
 
-    function start_spin(group) {
+    function start_spin(group, icon_text) {
+      group.select(".icon > text")
+        .text(icon_text);
       var icon = group.select(".icon");
       var bbox = icon.node().getBBox();
       var x = bbox.x + bbox.width / 2;
@@ -575,6 +577,13 @@
         .attr("to", "360 " + x + " " + y)
         .attr("dur", "2s")
         .attr("repeatDur", "indefinite");
+    }
+
+    function reset_spin(group, icon_text) {
+      group.select(".icon > text")
+        .text(icon_text);
+      group.select("animateTransform")
+        .remove();
     }
 
     function create_node(group, d) {
@@ -592,13 +601,9 @@
           } else {
             var animate = group.select("animateTransform");
             if (animate.empty()) {
-              group.select(".icon > text")
-                .text(icon_to_code("fa-spinner"));
-              start_spin(group);
+              start_spin(group, icon_to_code("fa-spinner"));
             } else {
-              animate.remove();
-              group.select(".icon > text")
-                .text(icon_to_code(info.icon));
+              reset_spin(group, icon_to_code(info.icon));
             }
           }
         })
