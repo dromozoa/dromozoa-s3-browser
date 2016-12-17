@@ -554,14 +554,13 @@
     function update_node(group) {
       var bbox = group.select(".name").node().getBBox();
       var em = bbox.x / name_x_em;
-      group
-        .select("rect")
-          .attr("x", (name_x_em - icon_width_em) * em - node_radius)
-          .attr("y", bbox.y - (node_height - bbox.height) * 0.5)
-          .attr("width", bbox.width + bbox.x * 2 + node_radius * 2)
-          .attr("height", node_height)
-          .attr("rx", node_radius)
-          .attr("ry", node_radius);
+      group.select("rect")
+        .attr("x", (name_x_em - icon_width_em) * em - node_radius)
+        .attr("y", bbox.y - (node_height - bbox.height) * 0.5)
+        .attr("width", bbox.width + bbox.x * 2 + node_radius * 2)
+        .attr("height", node_height)
+        .attr("rx", node_radius)
+        .attr("ry", node_radius);
     }
 
     function create_node(group, d) {
@@ -577,7 +576,7 @@
               load(key);
             }
           } else {
-            d3.select(this).select(".icon text")
+            d3.select(this).select(".icon > text")
               .text(icon_to_code("fa-spinner"));
             var icon = d3.select(this).select(".icon");
             var bbox = icon.node().getBBox();
@@ -624,20 +623,18 @@
       var v = grid_y;
       var i = 0;
       while (i <= 40) {
-        group
-          .append("line")
-            .attr("x1", 0)
-            .attr("y1", v * i)
-            .attr("x2", u * 40)
-            .attr("y2", v * i)
-            .style("stroke", "blue");
-        group
-          .append("line")
-            .attr("x1", u * i)
-            .attr("y1", 0)
-            .attr("x2", u * i)
-            .attr("y2", v * 40)
-            .style("stroke", "blue");
+        group.append("line")
+          .attr("x1", 0)
+          .attr("y1", v * i)
+          .attr("x2", u * 40)
+          .attr("y2", v * i)
+          .style("stroke", "blue");
+        group.append("line")
+          .attr("x1", u * i)
+          .attr("y1", 0)
+          .attr("x2", u * i)
+          .attr("y2", v * 40)
+          .style("stroke", "blue");
         i += 1;
       }
     }
@@ -681,7 +678,8 @@
             create_node(d3.select(this), d);
           });
 
-      nodes.exit().attr("class", "removing");
+      nodes.exit()
+        .attr("class", "removing");
 
       var transition = d3.transition().duration(500);
 
@@ -727,30 +725,25 @@
         .style("display", "block")
         .style("margin-top", "50px");
 
-    svg
-      .append("g")
-        .attr("class", "viewport")
-        .call(d3.zoom().on("zoom", function () {
-          svg.select(".view").attr("transform", d3.event.transform.toString());
-        }))
-        .append("rect")
-          .attr("fill", "white");
+    svg.append("g")
+      .attr("class", "viewport")
+      .call(d3.zoom().on("zoom", function () {
+        svg.select(".view")
+          .attr("transform", d3.event.transform.toString());
+      }))
+      .append("rect")
+        .attr("fill", "white");
 
     svg.select(".viewport")
       .append("g")
-        .attr("class", "view")
+        .classed("view", true)
         .append("g")
-          .attr("class", "model");
+          .classed("model", true)
+          .attr("transform", "translate(" + grid_x + "," + grid_y + ")");
 
     create_grid(svg.select(".model"));
 
     resize();
-    // root.setTimeout(function () {
-    //   console.log("resize");
-    //   svg.selectAll(".node").each(function (d) {
-    //     update_node(d3.select(this), d);
-    //   });
-    // }, 500);
   };
 
   if (!root.dromozoa) {
