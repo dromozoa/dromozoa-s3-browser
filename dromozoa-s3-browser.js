@@ -596,17 +596,14 @@
         .append("rect")
           .attr("fill", "white")
           .attr("stroke", "black");
-      var content_group = group
-        .append("g")
-          .classed("content", true);
-      content_group
+      group
         .append("g")
           .classed("icon", true)
           .append("text")
             .style("font-family", "FontAwesome")
             .style("text-anchor", "middle")
             .text(icon_to_code(info.icon));
-      var name_text = content_group
+      var name_text = group
         .append("text")
           .classed("name", true)
           .attr("x", name_x_em + "em");
