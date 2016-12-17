@@ -586,9 +586,9 @@
         .remove();
     }
 
-    function create_node(group, d) {
+    function create_node(node_group, d) {
       var info = key_to_info(d.data.key);
-      group
+      node_group
         .on("click", function (d) {
           var key = d.data.key;
           if (key.endsWith("/")) {
@@ -599,25 +599,25 @@
               load(key);
             }
           } else {
-            var animate = group.select("animateTransform");
+            var animate = node_group.select("animateTransform");
             if (animate.empty()) {
-              start_spin(group, "fa-spinner");
+              start_spin(node_group, "fa-spinner");
             } else {
-              reset_spin(group, info.icon);
+              reset_spin(node_group, info.icon);
             }
           }
         })
         .append("rect")
           .attr("fill", "white")
           .attr("stroke", "black");
-      group
+      node_group
         .append("g")
           .classed("icon", true)
           .append("text")
             .style("font-family", "FontAwesome")
             .style("text-anchor", "middle")
             .text(icon_to_code(info.icon));
-      var name_text = group
+      var name_text = node_group
         .append("text")
           .classed("name", true)
           .attr("x", name_x_em + "em");
@@ -630,7 +630,7 @@
             .attr("xlink:href", get_origin_uri().path(key_to_path(d.data.key)))
             .text(info.name);
       }
-      update_node(group);
+      update_node(node_group);
     }
 
     function create_grid(group) {
