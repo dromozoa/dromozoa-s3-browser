@@ -691,17 +691,26 @@
           .attr("class", "node")
           .each(function (d) {
             create_node(d3.select(this), d);
+          })
+          .attr("opacity", 0)
+          .attr("transform", function (d) {
+            if (d.parent) {
+              return "translate(" + d.parent.depth * grid_x + "," + d.parent.position * grid_y + ")";
+            }
           });
-
-      nodes.exit()
-        .attr("class", "removing");
 
       var transition = d3.transition().duration(500);
 
-      svg.selectAll(".removing")
+      nodes.exit()
+        .attr("class", "removing")
         .attr("opacity", 1)
         .transition(transition)
         .attr("opacity", 0)
+        .attr("transform", function (d) {
+          if (d.parent) {
+            return "translate(" + d.parent.depth * grid_x + "," + d.parent.position * grid_y + ")";
+          }
+        })
         .remove();
 
       svg.selectAll(".node")
@@ -709,6 +718,7 @@
           update_node(d3.select(this), d);
         })
         .transition(transition)
+        .attr("opacity", 1)
         .attr("transform", function (d) {
           return "translate(" + d.depth * grid_x + "," + d.position * grid_y + ")";
         });
