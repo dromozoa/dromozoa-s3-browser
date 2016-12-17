@@ -563,6 +563,20 @@
         .attr("ry", node_radius);
     }
 
+    function start_spin(group) {
+      var icon = group.select(".icon");
+      var bbox = icon.node().getBBox();
+      var x = bbox.x + bbox.width / 2;
+      var y = bbox.y + bbox.height / 2;
+      icon.append("animateTransform")
+        .attr("attributeName", "transform")
+        .attr("type", "rotate")
+        .attr("from", "0 " + x + " " + y)
+        .attr("to", "360 " + x + " " + y)
+        .attr("dur", "2s")
+        .attr("repeatDur", "indefinite");
+    }
+
     function create_node(group, d) {
       var info = key_to_info(d.data.key);
       group
@@ -576,20 +590,16 @@
               load(key);
             }
           } else {
-            d3.select(this).select(".icon > text")
-              .text(icon_to_code("fa-spinner"));
-            var icon = d3.select(this).select(".icon");
-            var bbox = icon.node().getBBox();
-            var x = bbox.x + bbox.width * 0.5;
-            var y = bbox.y + bbox.height * 0.5;
-            d3.select(this).select(".icon")
-              .append("animateTransform")
-                .attr("attributeName", "transform")
-                .attr("type", "rotate")
-                .attr("from", "0 " + x + " " + y)
-                .attr("to", "360 " + x + " " + y)
-                .attr("dur", "2s")
-                .attr("repeatDur", "indefinite");
+            var animate = group.select("animateTransform");
+            if (animate.empty()) {
+              group.select(".icon > text")
+                .text(icon_to_code("fa-spinner"));
+              start_spin(group);
+            } else {
+              animate.remove();
+              group.select(".icon > text")
+                .text(icon_to_code(info.icon));
+            }
           }
         })
         .append("rect")
