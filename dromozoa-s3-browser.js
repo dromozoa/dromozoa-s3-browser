@@ -551,10 +551,10 @@
     var load;
     var update;
 
-    function update_node(group) {
-      var bbox = group.select(".name").node().getBBox();
+    function update_node(node_group) {
+      var bbox = node_group.select(".name").node().getBBox();
       var em = bbox.x / name_x_em;
-      group.select("rect")
+      node_group.select("rect")
         .attr("x", (name_x_em - icon_width_em) * em - node_radius)
         .attr("y", bbox.y - (node_height - bbox.height) * 0.5)
         .attr("width", bbox.width + bbox.x * 2 + node_radius * 2)
@@ -563,14 +563,14 @@
         .attr("ry", node_radius);
     }
 
-    function start_spin(group, icon_text) {
-      group.select(".icon > text")
-        .text(icon_text);
-      var icon = group.select(".icon");
-      var bbox = icon.node().getBBox();
+    function start_spin(node_group, icon) {
+      node_group.select(".icon > text")
+        .text(icon_to_code(icon));
+      var icon_group = node_group.select(".icon");
+      var bbox = icon_group.node().getBBox();
       var x = bbox.x + bbox.width / 2;
       var y = bbox.y + bbox.height / 2;
-      icon.append("animateTransform")
+      icon_group.append("animateTransform")
         .attr("attributeName", "transform")
         .attr("type", "rotate")
         .attr("from", "0 " + x + " " + y)
@@ -579,10 +579,10 @@
         .attr("repeatDur", "indefinite");
     }
 
-    function reset_spin(group, icon_text) {
-      group.select(".icon > text")
-        .text(icon_text);
-      group.select("animateTransform")
+    function reset_spin(node_group, icon) {
+      node_group.select(".icon > text")
+        .text(icon_to_code(icon));
+      node_group.select("animateTransform")
         .remove();
     }
 
@@ -601,9 +601,9 @@
           } else {
             var animate = group.select("animateTransform");
             if (animate.empty()) {
-              start_spin(group, icon_to_code("fa-spinner"));
+              start_spin(group, "fa-spinner");
             } else {
-              reset_spin(group, icon_to_code(info.icon));
+              reset_spin(group, info.icon);
             }
           }
         })
