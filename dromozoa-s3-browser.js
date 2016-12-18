@@ -201,7 +201,7 @@
           }
           return false;
         }
-        value = value / 1024;
+        value /= 1024;
       });
       return result;
     }
@@ -537,9 +537,15 @@
   };
 
   module.tree = function () {
-    var font_awesome_fixed_width = 10 / 7;
-    // var font_size = 14px;
-    var unit = 16;
+    var font_awesome_fixed_width_em = 10 / 7;
+    var name_x_em = font_awesome_fixed_width_em / 2;
+    var icon_width_em = 0.5 + name_x_em;
+    var node_height = 24;
+    var node_radius = 12;
+    var grid_x = 30;
+    var grid_y = 40;
+
+    var em_to_px;
 
     var data = {};
     var svg;
@@ -547,145 +553,220 @@
     var load;
     var update;
 
-    /*
-      g.node
-        rect
-        g.content
-          g.icon
-            text.icon
-          g.name
-            text.name
-              a
-    */
-
-    function update_node(group) {
-      var bbox = group.select(".content").node().getBBox();
-      group
-        .select("rect")
-          .attr("x", bbox.x - unit * 0.75)
-          .attr("y", bbox.y - unit * 0.25)
-          .attr("width", bbox.width + unit * 1.5)
-          .attr("height", unit * 1.5)
-          .attr("rx", unit * 0.75)
-          .attr("ry", unit * 0.75);
+    function layout(root_node) {
+      var position = 0;
+      root_node.eachBefore(function (node) {
+        node.x = node.depth * grid_x;
+        node.y = position * grid_y;
+        position += 1;
+      });
     }
 
-    function create_node(group, d) {
+    function update_node(node_group) {
+      var bbox = node_group.select(".name").node().getBBox();
+      if (em_to_px === undefined) {
+        em_to_px = bbox.x / name_x_em;
+      }
+      node_group.select("rect")
+        .attr("x", (name_x_em - icon_width_em) * em_to_px - node_radius)
+        .attr("y", bbox.y - (node_height - bbox.height) * 0.5)
+        .attr("width", bbox.width + bbox.x * 2 + node_radius * 2)
+        .attr("height", node_height)
+        .attr("rx", node_radius)
+        .attr("ry", node_radius);
+    }
+
+    function set_icon(node_group, icon) {
+      node_group.select(".icon > text")
+        .text(icon_to_code(icon));
+    }
+
+    function start_spin(node_group, icon) {
+      set_icon(node_group, icon);
+      var icon_group = node_group.select(".icon");
+      var bbox = icon_group.node().getBBox();
+      var x = bbox.x + bbox.width / 2;
+      var y = bbox.y + bbox.height / 2;
+      icon_group.append("animateTransform")
+        .attr("attributeName", "transform")
+        .attr("type", "rotate")
+        .attr("from", "0 " + x + " " + y)
+        .attr("to", "360 " + x + " " + y)
+        .attr("dur", "2s")
+        .attr("repeatDur", "indefinite");
+    }
+
+    function reset_spin(node_group, icon) {
+      set_icon(node_group, icon);
+      node_group.select("animateTransform")
+        .remove();
+    }
+
+    function create_edge_path(parent_node, node) {
+      if (!node) {
+        node = parent_node;
+      }
+      var x1 = parent_node.x;
+      var y1 = parent_node.y;
+      var x2 = node.x;
+      var y2 = node.y;
+      var path = d3.path();
+      path.moveTo(x1, y1);
+      path.bezierCurveTo(x1, y2, x1, y2, x2, y2);
+      return path;
+    }
+
+    function create_node(node_group, d) {
       var info = key_to_info(d.data.key);
-      group
+      node_group
         .on("click", function (d) {
           var key = d.data.key;
           if (key.endsWith("/")) {
             if (data[key]) {
-              data[key] = undefined;
+              d.eachAfter(function (node) {
+                if (node.data.key.endsWith("/")) {
+                  data[node.data.key] = undefined;
+                }
+              });
               update();
             } else {
-              load(key);
+              load(key, node_group);
             }
-          } else {
-            d3.select(this).select(".icon text")
-              .text(icon_to_code("fa-spinner"));
-            var icon = d3.select(this).select(".icon");
-            var bbox = icon.node().getBBox();
-            var x = bbox.x + bbox.width * 0.5;
-            var y = bbox.y + bbox.height * 0.5;
-            d3.select(this).select(".icon")
-              .append("animateTransform")
-                .attr("attributeName", "transform")
-                .attr("type", "rotate")
-                .attr("from", "0 " + x + " " + y)
-                .attr("to", "360 " + x + " " + y)
-                .attr("dur", "2s")
-                .attr("repeatDur", "indefinite");
           }
-        })
-        .append("rect")
-          .attr("fill", "white")
-          .attr("stroke", "black");
-      var content_group = group
-        .append("g")
-          .classed("content", true);
-      content_group
-        .append("g")
-          .classed("icon", true)
-          .append("text")
-            .attr("x", font_awesome_fixed_width * 0.5 + "em")
-            .style("font-family", "FontAwesome")
-            .style("text-anchor", "middle")
-            .text(icon_to_code(info.icon));
-      var name_text = content_group
-        .append("g")
-          .classed("name", true)
-          .append("text")
-            .attr("x", font_awesome_fixed_width + "em");
+        });
+      node_group.append("rect")
+        .attr("fill", "white")
+        .attr("stroke", "black");
+      node_group.append("g")
+        .classed("icon", true)
+        .append("text")
+          .style("font-family", "FontAwesome")
+          .style("text-anchor", "middle")
+          .text(icon_to_code(info.icon));
+      var name_text = node_group.append("text")
+        .classed("name", true)
+        .attr("x", name_x_em + "em");
       if (info.type === "folder") {
-        name_text
-          .text(info.name);
+        name_text.text(info.name);
       } else {
-        name_text
-          .append("a")
-            .attr("xlink:href", get_origin_uri().path(key_to_path(d.data.key)))
-            .text(info.name);
+        name_text.append("a")
+          .attr("xlink:href", get_origin_uri().path(key_to_path(d.data.key)))
+          .text(info.name);
       }
-      update_node(group);
+      update_node(node_group);
     }
 
-    load = function (prefix) {
+    function create_grid(model_group) {
+      var i = 0;
+      while (i <= 40) {
+        model_group.append("line")
+          .attr("x1", 0)
+          .attr("y1", grid_y * i)
+          .attr("x2", grid_x * 40)
+          .attr("y2", grid_y * i)
+          .style("stroke", "blue");
+        model_group.append("line")
+          .attr("x1", grid_x * i)
+          .attr("y1", 0)
+          .attr("x2", grid_x * i)
+          .attr("y2", grid_y * 40)
+          .style("stroke", "blue");
+        i += 1;
+      }
+    }
+
+    load = function (prefix, node_group) {
+      if (node_group) {
+        start_spin(node_group, "fa-spinner");
+      }
       list_bucket(get_origin_uri(), prefix).done(function (result) {
+        if (node_group) {
+          reset_spin(node_group, key_to_info(prefix).icon);
+        }
         data[result.prefix] = result.items.sort(function (a, b) {
           return compare(a.key, b.key);
         });
         update();
       }).fail(function () {
+        if (node_group) {
+          reset_spin(node_group, key_to_info(prefix).icon);
+        }
         error("could not load");
       });
     };
 
-    function layout(root_node) {
-      var position = 0;
-      root_node.eachBefore(function (node) {
-        node.position = position;
-        position += 1;
-      });
-    }
-
     update = function () {
-      var tree_root = d3.hierarchy({ key: get_prefix() }, function (d) {
+      var root_node = d3.hierarchy({ key: get_prefix() }, function (d) {
         return data[d.key];
       });
-
-      layout(tree_root);
-
-      var nodes = svg.select(".model")
-        .selectAll(".node")
-        .data(tree_root.descendants(), function (d) {
-          return d.data.key;
-        });
-
-      nodes.enter()
-        .append("g")
-          .attr("class", "node")
-          .each(function (d) {
-            create_node(d3.select(this), d);
-          });
-
-      nodes.exit().attr("class", "removing");
+      layout(root_node);
 
       var transition = d3.transition().duration(500);
 
-      svg.selectAll(".removing")
-        .attr("opacity", 1)
+      var edge_groups = svg.select(".edges")
+        .selectAll(".edge")
+        .data(root_node.descendants().slice(1), function (d) {
+          return d.data.key;
+        });
+
+      edge_groups.enter()
+        .append("path")
+          .classed("edge", true)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("d", function (d) {
+            return create_edge_path(d.parent).toString();
+          });
+
+      edge_groups.exit()
+        .classed("edge", false)
+        .transition(transition)
+        .attr("d", function (d) {
+          return create_edge_path(d.parent).toString();
+        })
+        .remove();
+
+      svg.selectAll(".edge")
+        .transition(transition)
+        .attr("d", function (d) {
+          return create_edge_path(d.parent, d).toString();
+        });
+
+      var node_groups = svg.select(".nodes")
+        .selectAll(".node")
+        .data(root_node.descendants(), function (d) {
+          return d.data.key;
+        });
+
+      node_groups.enter()
+        .insert("g", ":first-child")
+          .classed("node", true)
+          .each(function (d) {
+            create_node(d3.select(this), d);
+          })
+          .attr("opacity", 0)
+          .attr("transform", function (d) {
+            if (d.parent) {
+              return "translate(" + d.parent.x + "," + d.parent.y + ")";
+            }
+          });
+
+      node_groups.exit()
+        .classed("node", false)
         .transition(transition)
         .attr("opacity", 0)
+        .attr("transform", function (d) {
+          if (d.parent) {
+            return "translate(" + d.parent.x + "," + d.parent.y + ")";
+          }
+        })
         .remove();
 
       svg.selectAll(".node")
-        .each(function (d) {
-          update_node(d3.select(this), d);
-        })
         .transition(transition)
+        .attr("opacity", 1)
         .attr("transform", function (d) {
-          return "translate(" + d.depth * 40 + "," + d.position * 40 + ")";
+          return "translate(" + d.x + "," + d.y + ")";
         });
     };
 
@@ -700,43 +781,41 @@
         .attr("height", height);
     }
 
-    $(root).on("resize", function () {
-      resize();
-      update();
-    });
-
-    $(function () {
-      load(get_prefix());
-    });
+    $(root).on("resize", resize);
 
     svg = d3.select(".dromozoa-s3-browser")
       .append("svg")
-        .attr("class", "dromozoa-s3-browser-tree")
+        .classed("dromozoa-s3-browser-tree", true)
         .style("display", "block")
         .style("margin-top", "50px");
 
-    svg
-      .append("g")
-        .attr("class", "viewport")
-        .call(d3.zoom().on("zoom", function () {
-          svg.select(".view").attr("transform", d3.event.transform.toString());
-        }))
-        .append("rect")
-          .attr("fill", "white");
+    svg.append("g")
+      .classed("viewport", true)
+      .call(d3.zoom().on("zoom", function () {
+        svg.select(".view")
+          .attr("transform", d3.event.transform.toString());
+      }))
+      .append("rect")
+        .attr("fill", "white");
 
-    svg.select(".viewport")
+    var model_group = svg.select(".viewport")
       .append("g")
-        .attr("class", "view")
+        .classed("view", true)
         .append("g")
-          .attr("class", "model");
+          .classed("model", true)
+          .attr("transform", "translate(" + grid_x + "," + grid_y + ")");
+
+    create_grid(model_group);
+    model_group
+      .append("g")
+        .classed("nodes", true);
+    model_group
+      .append("g")
+        .classed("edges", true);
 
     resize();
-    // root.setTimeout(function () {
-    //   console.log("resize");
-    //   svg.selectAll(".node").each(function (d) {
-    //     update_node(d3.select(this), d);
-    //   });
-    // }, 500);
+    update();
+    load(get_prefix());
   };
 
   if (!root.dromozoa) {
