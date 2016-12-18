@@ -593,7 +593,11 @@
           var key = d.data.key;
           if (key.endsWith("/")) {
             if (data[key]) {
-              data[key] = undefined;
+              d.eachAfter(function (node) {
+                if (node.data.key.endsWith("/")) {
+                  data[node.data.key] = undefined;
+                }
+              });
               update();
             } else {
               load(key);
