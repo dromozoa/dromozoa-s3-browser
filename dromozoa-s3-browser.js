@@ -617,8 +617,8 @@
           }
         });
       node_group.append("rect")
-          .attr("fill", "white")
-          .attr("stroke", "black");
+        .attr("fill", "white")
+        .attr("stroke", "black");
       node_group.append("g")
         .classed("icon", true)
         .append("text")
