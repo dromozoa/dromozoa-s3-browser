@@ -598,6 +598,20 @@
         .remove();
     }
 
+    function create_edge_path(parent_node, node) {
+      if (!node) {
+        node = parent_node;
+      }
+      var x1 = parent_node.x;
+      var y1 = parent_node.y;
+      var x2 = node.x;
+      var y2 = node.y;
+      var path = d3.path();
+      path.moveTo(x1, y1);
+      path.bezierCurveTo(x1, y2, x1, y2, x2, y2);
+      return path;
+    }
+
     function create_node(node_group, d) {
       var info = key_to_info(d.data.key);
       node_group
@@ -685,6 +699,35 @@
 
       var transition = d3.transition().duration(500);
 
+      var edge_groups = svg.select(".edges")
+        .selectAll(".edge")
+        .data(root_node.descendants().slice(1), function (d) {
+          return d.data.key;
+        });
+
+      edge_groups.enter()
+        .append("path")
+          .classed("edge", true)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("d", function (d) {
+            return create_edge_path(d.parent).toString();
+          });
+
+      edge_groups.exit()
+        .classed("edge", false)
+        .transition(transition)
+        .attr("d", function (d) {
+          return create_edge_path(d.parent).toString();
+        })
+        .remove();
+
+      svg.selectAll(".edge")
+        .transition(transition)
+        .attr("d", function (d) {
+          return create_edge_path(d.parent, d).toString();
+        });
+
       var node_groups = svg.select(".nodes")
         .selectAll(".node")
         .data(root_node.descendants(), function (d) {
@@ -761,10 +804,10 @@
     create_grid(model_group);
     model_group
       .append("g")
-        .classed("edges", true);
+        .classed("nodes", true);
     model_group
       .append("g")
-        .classed("nodes", true);
+        .classed("edges", true);
 
     resize();
     update();
