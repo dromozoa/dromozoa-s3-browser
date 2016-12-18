@@ -551,6 +551,15 @@
     var load;
     var update;
 
+    function layout(root_node) {
+      var position = 0;
+      root_node.eachBefore(function (node) {
+        node.x = node.depth * grid_x;
+        node.y = position * grid_y;
+        position += 1;
+      });
+    }
+
     function update_node(node_group) {
       var bbox = node_group.select(".name").node().getBBox();
       var em = bbox.x / name_x_em;
@@ -603,14 +612,7 @@
               });
               update();
             } else {
-              load(key);
-            }
-          } else {
-            var animate = node_group.select("animateTransform");
-            if (animate.empty()) {
-              start_spin(node_group, "fa-spinner");
-            } else {
-              reset_spin(node_group, info.icon);
+              load(key, node_group);
             }
           }
         });
@@ -655,25 +657,25 @@
       }
     }
 
-    load = function (prefix) {
+    load = function (prefix, node_group) {
+      if (node_group) {
+        start_spin(node_group, "fa-spinner");
+      }
       list_bucket(get_origin_uri(), prefix).done(function (result) {
+        if (node_group) {
+          reset_spin(node_group, key_to_info(prefix).icon);
+        }
         data[result.prefix] = result.items.sort(function (a, b) {
           return compare(a.key, b.key);
         });
         update();
       }).fail(function () {
+        if (node_group) {
+          reset_spin(node_group, key_to_info(prefix).icon);
+        }
         error("could not load");
       });
     };
-
-    function layout(root_node) {
-      var position = 0;
-      root_node.eachBefore(function (node) {
-        node.x = node.depth * grid_x;
-        node.y = position * grid_y;
-        position += 1;
-      });
-    }
 
     update = function () {
       var root_node = d3.hierarchy({ key: get_prefix() }, function (d) {
