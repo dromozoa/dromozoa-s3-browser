@@ -692,7 +692,7 @@
         });
 
       node_groups.enter()
-        .append("g")
+        .insert("g", ":first-child")
           .classed("node", true)
           .each(function (d) {
             create_node(d3.select(this), d);
@@ -736,10 +736,6 @@
 
     $(root).on("resize", resize);
 
-    $(function () {
-      load(get_prefix());
-    });
-
     svg = d3.select(".dromozoa-s3-browser")
       .append("svg")
         .classed("dromozoa-s3-browser-tree", true)
@@ -769,7 +765,10 @@
     model_group
       .append("g")
         .classed("nodes", true);
+
     resize();
+    update();
+    load(get_prefix());
   };
 
   if (!root.dromozoa) {
