@@ -563,9 +563,13 @@
         .attr("ry", node_radius);
     }
 
-    function start_spin(node_group, icon) {
+    function set_icon(node_group, icon) {
       node_group.select(".icon > text")
         .text(icon_to_code(icon));
+    }
+
+    function start_spin(node_group, icon) {
+      set_icon(node_group, icon);
       var icon_group = node_group.select(".icon");
       var bbox = icon_group.node().getBBox();
       var x = bbox.x + bbox.width / 2;
@@ -580,8 +584,7 @@
     }
 
     function reset_spin(node_group, icon) {
-      node_group.select(".icon > text")
-        .text(icon_to_code(icon));
+      set_icon(node_group, icon);
       node_group.select("animateTransform")
         .remove();
     }
@@ -610,49 +613,43 @@
               reset_spin(node_group, info.icon);
             }
           }
-        })
-        .append("rect")
+        });
+      node_group.append("rect")
           .attr("fill", "white")
           .attr("stroke", "black");
-      node_group
-        .append("g")
-          .classed("icon", true)
-          .append("text")
-            .style("font-family", "FontAwesome")
-            .style("text-anchor", "middle")
-            .text(icon_to_code(info.icon));
-      var name_text = node_group
+      node_group.append("g")
+        .classed("icon", true)
         .append("text")
-          .classed("name", true)
-          .attr("x", name_x_em + "em");
+          .style("font-family", "FontAwesome")
+          .style("text-anchor", "middle")
+          .text(icon_to_code(info.icon));
+      var name_text = node_group.append("text")
+        .classed("name", true)
+        .attr("x", name_x_em + "em");
       if (info.type === "folder") {
-        name_text
-          .text(info.name);
+        name_text.text(info.name);
       } else {
-        name_text
-          .append("a")
-            .attr("xlink:href", get_origin_uri().path(key_to_path(d.data.key)))
-            .text(info.name);
+        name_text.append("a")
+          .attr("xlink:href", get_origin_uri().path(key_to_path(d.data.key)))
+          .text(info.name);
       }
       update_node(node_group);
     }
 
-    function create_grid(group) {
-      var u = grid_x;
-      var v = grid_y;
+    function create_grid(model_group) {
       var i = 0;
       while (i <= 40) {
-        group.append("line")
+        model_group.append("line")
           .attr("x1", 0)
-          .attr("y1", v * i)
-          .attr("x2", u * 40)
-          .attr("y2", v * i)
+          .attr("y1", grid_y * i)
+          .attr("x2", grid_x * 40)
+          .attr("y2", grid_y * i)
           .style("stroke", "blue");
-        group.append("line")
-          .attr("x1", u * i)
+        model_group.append("line")
+          .attr("x1", grid_x * i)
           .attr("y1", 0)
-          .attr("x2", u * i)
-          .attr("y2", v * 40)
+          .attr("x2", grid_x * i)
+          .attr("y2", grid_y * 40)
           .style("stroke", "blue");
         i += 1;
       }
@@ -670,28 +667,28 @@
     };
 
     function layout(root_node) {
-      var i = 0;
+      var position = 0;
       root_node.eachBefore(function (node) {
         node.x = node.depth * grid_x;
-        node.y = i * grid_y;
-        i += 1;
+        node.y = position * grid_y;
+        position += 1;
       });
     }
 
     update = function () {
-      var tree_root = d3.hierarchy({ key: get_prefix() }, function (d) {
+      var root_node = d3.hierarchy({ key: get_prefix() }, function (d) {
         return data[d.key];
       });
+      layout(root_node);
 
-      layout(tree_root);
+      var transition = d3.transition().duration(500);
 
-      var nodes = svg.select(".model")
+      var node_groups = svg.select(".model")
         .selectAll(".node")
-        .data(tree_root.descendants(), function (d) {
+        .data(root_node.descendants(), function (d) {
           return d.data.key;
         });
-
-      nodes.enter()
+      node_groups.enter()
         .append("g")
           .attr("class", "node")
           .each(function (d) {
@@ -703,10 +700,7 @@
               return "translate(" + d.parent.x + "," + d.parent.y + ")";
             }
           });
-
-      var transition = d3.transition().duration(500);
-
-      nodes.exit()
+      node_groups.exit()
         .attr("class", "removing")
         .attr("opacity", 1)
         .transition(transition)
