@@ -685,7 +685,7 @@
 
       var transition = d3.transition().duration(500);
 
-      var node_groups = svg.select(".model")
+      var node_groups = svg.select(".nodes")
         .selectAll(".node")
         .data(root_node.descendants(), function (d) {
           return d.data.key;
@@ -755,15 +755,20 @@
       .append("rect")
         .attr("fill", "white");
 
-    svg.select(".viewport")
+    var model_group = svg.select(".viewport")
       .append("g")
         .classed("view", true)
         .append("g")
           .classed("model", true)
           .attr("transform", "translate(" + grid_x + "," + grid_y + ")");
 
-    create_grid(svg.select(".model"));
-
+    create_grid(model_group);
+    model_group
+      .append("g")
+        .classed("edges", true);
+    model_group
+      .append("g")
+        .classed("nodes", true);
     resize();
   };
 
