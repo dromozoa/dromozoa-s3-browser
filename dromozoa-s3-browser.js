@@ -688,9 +688,10 @@
         .data(root_node.descendants(), function (d) {
           return d.data.key;
         });
+
       node_groups.enter()
         .append("g")
-          .attr("class", "node")
+          .classed("node", true)
           .each(function (d) {
             create_node(d3.select(this), d);
           })
@@ -700,9 +701,9 @@
               return "translate(" + d.parent.x + "," + d.parent.y + ")";
             }
           });
+
       node_groups.exit()
-        .attr("class", "removing")
-        .attr("opacity", 1)
+        .classed("node", false)
         .transition(transition)
         .attr("opacity", 0)
         .attr("transform", function (d) {
@@ -713,9 +714,6 @@
         .remove();
 
       svg.selectAll(".node")
-        .each(function (d) {
-          update_node(d3.select(this), d);
-        })
         .transition(transition)
         .attr("opacity", 1)
         .attr("transform", function (d) {
@@ -734,10 +732,7 @@
         .attr("height", height);
     }
 
-    $(root).on("resize", function () {
-      resize();
-      update();
-    });
+    $(root).on("resize", resize);
 
     $(function () {
       load(get_prefix());
@@ -745,12 +740,12 @@
 
     svg = d3.select(".dromozoa-s3-browser")
       .append("svg")
-        .attr("class", "dromozoa-s3-browser-tree")
+        .classed("dromozoa-s3-browser-tree", true)
         .style("display", "block")
         .style("margin-top", "50px");
 
     svg.append("g")
-      .attr("class", "viewport")
+      .classed("viewport", true)
       .call(d3.zoom().on("zoom", function () {
         svg.select(".view")
           .attr("transform", d3.event.transform.toString());
