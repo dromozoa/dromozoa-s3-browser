@@ -545,6 +545,8 @@
     var grid_x = 30;
     var grid_y = 40;
 
+    var em_to_px;
+
     var data = {};
     var svg;
 
@@ -562,9 +564,11 @@
 
     function update_node(node_group) {
       var bbox = node_group.select(".name").node().getBBox();
-      var em = bbox.x / name_x_em;
+      if (em_to_px === undefined) {
+        em_to_px = bbox.x / name_x_em;
+      }
       node_group.select("rect")
-        .attr("x", (name_x_em - icon_width_em) * em - node_radius)
+        .attr("x", (name_x_em - icon_width_em) * em_to_px - node_radius)
         .attr("y", bbox.y - (node_height - bbox.height) * 0.5)
         .attr("width", bbox.width + bbox.x * 2 + node_radius * 2)
         .attr("height", node_height)
