@@ -670,10 +670,11 @@
     };
 
     function layout(root_node) {
-      var position = 0;
+      var i = 0;
       root_node.eachBefore(function (node) {
-        node.position = position;
-        position += 1;
+        node.x = node.depth * grid_x;
+        node.y = i * grid_y;
+        i += 1;
       });
     }
 
@@ -699,7 +700,7 @@
           .attr("opacity", 0)
           .attr("transform", function (d) {
             if (d.parent) {
-              return "translate(" + d.parent.depth * grid_x + "," + d.parent.position * grid_y + ")";
+              return "translate(" + d.parent.x + "," + d.parent.y + ")";
             }
           });
 
@@ -712,7 +713,7 @@
         .attr("opacity", 0)
         .attr("transform", function (d) {
           if (d.parent) {
-            return "translate(" + d.parent.depth * grid_x + "," + d.parent.position * grid_y + ")";
+            return "translate(" + d.parent.x + "," + d.parent.y + ")";
           }
         })
         .remove();
@@ -724,7 +725,7 @@
         .transition(transition)
         .attr("opacity", 1)
         .attr("transform", function (d) {
-          return "translate(" + d.depth * grid_x + "," + d.position * grid_y + ")";
+          return "translate(" + d.x + "," + d.y + ")";
         });
     };
 
