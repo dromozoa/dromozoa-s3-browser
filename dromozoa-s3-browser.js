@@ -727,6 +727,7 @@
           .classed("edge", true)
           .attr("fill", "none")
           .attr("stroke", "black")
+          .attr("opacity", 0)
           .attr("d", function (d) {
             return create_edge_path(d.parent).toString();
           });
@@ -734,6 +735,7 @@
       edge_groups.exit()
         .classed("edge", false)
         .transition(transition)
+        .attr("opacity", 0)
         .attr("d", function (d) {
           return create_edge_path(d.parent).toString();
         })
@@ -741,6 +743,7 @@
 
       svg.selectAll(".edge")
         .transition(transition)
+        .attr("opacity", 1)
         .attr("d", function (d) {
           return create_edge_path(d.parent, d).toString();
         });
