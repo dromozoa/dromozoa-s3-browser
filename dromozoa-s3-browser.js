@@ -22,8 +22,6 @@
   var $ = root.jQuery;
   var unused = $.noop;
   var d3 = root.d3;
-  // var vecmath = root.dromozoa.vecmath;
-  // var Vector2 = vecmath.Vector2;
 
   function error(message) {
     if (root.alert) {
@@ -542,10 +540,13 @@
     var icon_width_em = 0.5 + name_x_em;
     var node_height = 24;
     var node_radius = 12;
-    var grid_x = 30;
+    var grid_x = 40;
     var grid_y = 40;
 
-    var em_to_px;
+    var edge_start_x_offset;
+    var edge_start_y_offset;
+    var edge_end_x_offset;
+    var edge_end_y_offset;
 
     var data = {};
     var svg;
@@ -564,16 +565,23 @@
 
     function update_node(node_group) {
       var bbox = node_group.select(".name").node().getBBox();
-      if (em_to_px === undefined) {
-        em_to_px = bbox.x / name_x_em;
-      }
+      var em = bbox.x / name_x_em;
+      var x = (name_x_em - icon_width_em) * em - node_radius;
+      var y = bbox.y - (node_height - bbox.height) * 0.5;
+      var width = bbox.x * 2 + bbox.width + node_radius * 2;
       node_group.select("rect")
-        .attr("x", (name_x_em - icon_width_em) * em_to_px - node_radius)
-        .attr("y", bbox.y - (node_height - bbox.height) * 0.5)
-        .attr("width", bbox.width + bbox.x * 2 + node_radius * 2)
+        .attr("x", x)
+        .attr("y", y)
+        .attr("width", width)
         .attr("height", node_height)
         .attr("rx", node_radius)
         .attr("ry", node_radius);
+      if (edge_start_x_offset  === undefined) {
+        edge_start_x_offset = 0;
+        edge_start_y_offset = y + node_height;
+        edge_end_x_offset = x;
+        edge_end_y_offset = y + node_height * 0.5;
+      }
     }
 
     function set_icon(node_group, icon) {
@@ -606,13 +614,19 @@
       if (!node) {
         node = parent_node;
       }
-      var x1 = parent_node.x;
-      var y1 = parent_node.y;
-      var x2 = node.x;
-      var y2 = node.y;
+      var sx = parent_node.x;
+      var sy = parent_node.y;
+      var ex = node.x;
+      var ey = node.y;
+      if (edge_start_x_offset !== undefined) {
+        sx += edge_start_x_offset;
+        sy += edge_start_y_offset;
+        ex += edge_end_x_offset;
+        ey += edge_end_y_offset;
+      }
       var path = d3.path();
-      path.moveTo(x1, y1);
-      path.bezierCurveTo(x1, y2, x1, y2, x2, y2);
+      path.moveTo(sx, sy);
+      path.bezierCurveTo(sx, ey, sx, ey, ex, ey);
       return path;
     }
 
@@ -656,25 +670,6 @@
       update_node(node_group);
     }
 
-    function create_grid(model_group) {
-      var i = 0;
-      while (i <= 40) {
-        model_group.append("line")
-          .attr("x1", 0)
-          .attr("y1", grid_y * i)
-          .attr("x2", grid_x * 40)
-          .attr("y2", grid_y * i)
-          .style("stroke", "blue");
-        model_group.append("line")
-          .attr("x1", grid_x * i)
-          .attr("y1", 0)
-          .attr("x2", grid_x * i)
-          .attr("y2", grid_y * 40)
-          .style("stroke", "blue");
-        i += 1;
-      }
-    }
-
     load = function (prefix, node_group) {
       if (node_group) {
         start_spin(node_group, "fa-spinner");
@@ -713,7 +708,8 @@
         .append("path")
           .classed("edge", true)
           .attr("fill", "none")
-          .attr("stroke", "red")
+          .attr("stroke", "black")
+          .attr("opacity", 0)
           .attr("d", function (d) {
             return create_edge_path(d.parent).toString();
           });
@@ -721,6 +717,7 @@
       edge_groups.exit()
         .classed("edge", false)
         .transition(transition)
+        .attr("opacity", 0)
         .attr("d", function (d) {
           return create_edge_path(d.parent).toString();
         })
@@ -728,6 +725,7 @@
 
       svg.selectAll(".edge")
         .transition(transition)
+        .attr("opacity", 1)
         .attr("d", function (d) {
           return create_edge_path(d.parent, d).toString();
         });
@@ -805,13 +803,12 @@
           .classed("model", true)
           .attr("transform", "translate(" + grid_x + "," + grid_y + ")");
 
-    create_grid(model_group);
-    model_group
-      .append("g")
-        .classed("nodes", true);
     model_group
       .append("g")
         .classed("edges", true);
+    model_group
+      .append("g")
+        .classed("nodes", true);
 
     resize();
     update();
