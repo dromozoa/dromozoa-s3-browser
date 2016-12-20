@@ -22,8 +22,6 @@
   var $ = root.jQuery;
   var unused = $.noop;
   var d3 = root.d3;
-  // var vecmath = root.dromozoa.vecmath;
-  // var Vector2 = vecmath.Vector2;
 
   function error(message) {
     if (root.alert) {
@@ -545,9 +543,10 @@
     var grid_x = 40;
     var grid_y = 40;
 
-    var edge_start_y;
-    var edge_end_x;
-    var edge_end_y;
+    var edge_start_x_offset;
+    var edge_start_y_offset;
+    var edge_end_x_offset;
+    var edge_end_y_offset;
 
     var data = {};
     var svg;
@@ -577,10 +576,11 @@
         .attr("height", node_height)
         .attr("rx", node_radius)
         .attr("ry", node_radius);
-      if (edge_start_y === undefined) {
-        edge_start_y = y + node_height;
-        edge_end_x = x;
-        edge_end_y = y + node_height * 0.5;
+      if (edge_start_x_offset  === undefined) {
+        edge_start_x_offset = 0;
+        edge_start_y_offset = y + node_height;
+        edge_end_x_offset = x;
+        edge_end_y_offset = y + node_height * 0.5;
       }
     }
 
@@ -618,10 +618,11 @@
       var sy = parent_node.y;
       var ex = node.x;
       var ey = node.y;
-      if (edge_start_y !== undefined) {
-        sy += edge_start_y;
-        ex += edge_end_x;
-        ey += edge_end_y;
+      if (edge_start_x_offset !== undefined) {
+        sx += edge_start_x_offset;
+        sy += edge_start_y_offset;
+        ex += edge_end_x_offset;
+        ey += edge_end_y_offset;
       }
       var path = d3.path();
       path.moveTo(sx, sy);
@@ -667,25 +668,6 @@
           .text(info.name);
       }
       update_node(node_group);
-    }
-
-    function create_grid(model_group) {
-      var i = 0;
-      while (i <= 40) {
-        model_group.append("line")
-          .attr("x1", 0)
-          .attr("y1", grid_y * i)
-          .attr("x2", grid_x * 40)
-          .attr("y2", grid_y * i)
-          .style("stroke", "blue");
-        model_group.append("line")
-          .attr("x1", grid_x * i)
-          .attr("y1", 0)
-          .attr("x2", grid_x * i)
-          .attr("y2", grid_y * 40)
-          .style("stroke", "blue");
-        i += 1;
-      }
     }
 
     load = function (prefix, node_group) {
@@ -821,7 +803,6 @@
           .classed("model", true)
           .attr("transform", "translate(" + grid_x + "," + grid_y + ")");
 
-    // create_grid(model_group);
     model_group
       .append("g")
         .classed("edges", true);
