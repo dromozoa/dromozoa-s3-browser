@@ -542,10 +542,12 @@
     var icon_width_em = 0.5 + name_x_em;
     var node_height = 24;
     var node_radius = 12;
-    var grid_x = 30;
+    var grid_x = 40;
     var grid_y = 40;
 
-    var em_to_px;
+    var edge_start_y;
+    var edge_end_x;
+    var edge_end_y;
 
     var data = {};
     var svg;
@@ -564,16 +566,22 @@
 
     function update_node(node_group) {
       var bbox = node_group.select(".name").node().getBBox();
-      if (em_to_px === undefined) {
-        em_to_px = bbox.x / name_x_em;
-      }
+      var em = bbox.x / name_x_em;
+      var x = (name_x_em - icon_width_em) * em - node_radius;
+      var y = bbox.y - (node_height - bbox.height) * 0.5;
+      var width = bbox.x * 2 + bbox.width + node_radius * 2;
       node_group.select("rect")
-        .attr("x", (name_x_em - icon_width_em) * em_to_px - node_radius)
-        .attr("y", bbox.y - (node_height - bbox.height) * 0.5)
-        .attr("width", bbox.width + bbox.x * 2 + node_radius * 2)
+        .attr("x", x)
+        .attr("y", y)
+        .attr("width", width)
         .attr("height", node_height)
         .attr("rx", node_radius)
         .attr("ry", node_radius);
+      if (edge_start_y === undefined) {
+        edge_start_y = y + node_height;
+        edge_end_x = x;
+        edge_end_y = y + node_height * 0.5;
+      }
     }
 
     function set_icon(node_group, icon) {
@@ -606,13 +614,18 @@
       if (!node) {
         node = parent_node;
       }
-      var x1 = parent_node.x;
-      var y1 = parent_node.y;
-      var x2 = node.x;
-      var y2 = node.y;
+      var sx = parent_node.x;
+      var sy = parent_node.y;
+      var ex = node.x;
+      var ey = node.y;
+      if (edge_start_y !== undefined) {
+        sy += edge_start_y;
+        ex += edge_end_x;
+        ey += edge_end_y;
+      }
       var path = d3.path();
-      path.moveTo(x1, y1);
-      path.bezierCurveTo(x1, y2, x1, y2, x2, y2);
+      path.moveTo(sx, sy);
+      path.bezierCurveTo(sx, ey, sx, ey, ex, ey);
       return path;
     }
 
@@ -713,7 +726,7 @@
         .append("path")
           .classed("edge", true)
           .attr("fill", "none")
-          .attr("stroke", "red")
+          .attr("stroke", "black")
           .attr("d", function (d) {
             return create_edge_path(d.parent).toString();
           });
@@ -805,13 +818,13 @@
           .classed("model", true)
           .attr("transform", "translate(" + grid_x + "," + grid_y + ")");
 
-    create_grid(model_group);
-    model_group
-      .append("g")
-        .classed("nodes", true);
+    // create_grid(model_group);
     model_group
       .append("g")
         .classed("edges", true);
+    model_group
+      .append("g")
+        .classed("nodes", true);
 
     resize();
     update();
