@@ -540,9 +540,9 @@
     var icon_width_em = 0.5 + name_x_em;
     var node_height = 24;
     var node_radius = 12;
-    var grid_x = 40;
+    var grid_x = 30;
     var grid_y = 40;
-
+    var edge_control = 6;
     var edge_start_x_offset;
     var edge_start_y_offset;
     var edge_end_x_offset;
@@ -624,9 +624,14 @@
         ex += edge_end_x_offset;
         ey += edge_end_y_offset;
       }
+      var c = Math.min(Math.abs(ex - sx), Math.abs(ey - sy), edge_control);
+      var mx = sx < ex ? sx + c : sx - c;
+      var my = sy < ey ? ey - c : ey + c;
       var path = d3.path();
       path.moveTo(sx, sy);
-      path.bezierCurveTo(sx, ey, sx, ey, ex, ey);
+      path.lineTo(sx, my);
+      path.quadraticCurveTo(sx, ey, mx, ey);
+      path.lineTo(ex, ey);
       return path;
     }
 
