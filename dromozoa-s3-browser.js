@@ -336,6 +336,15 @@
     }
   }
 
+  function get_close() {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.close) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   function get_zoom_x() {
     var query = root.URI.parseQuery(new root.URI().query());
     if (query.zoom_x) {
@@ -610,11 +619,17 @@
         if (!update_history.timer) {
           update_history.timer = root.setTimeout(function () {
             var uri = get_uri().addQuery("mode", "tree");
+            var close = get_path_prefix();
             var prefixes = $.map(data, function (v, k) {
-              if (k !== get_path_prefix()) {
+              if (k === get_path_prefix()) {
+                close = false;
+              } else {
                 return k;
               }
             }).sort();
+            if (close) {
+              uri.addQuery("close", close);
+            }
             if (prefixes.length > 0) {
               uri.addQuery("prefix", prefixes);
             }
@@ -917,9 +932,11 @@
 
     resize();
     update();
-    $.each(get_prefixes(), function (i, v) {
-      load(v);
-    });
+    if (!get_close()) {
+      $.each(get_prefixes(), function (i, v) {
+        load(v);
+      });
+    }
   };
 
   if (!root.dromozoa) {
