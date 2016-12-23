@@ -336,6 +336,15 @@
     }
   }
 
+  function get_close() {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.close) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   function get_zoom_x() {
     var query = root.URI.parseQuery(new root.URI().query());
     if (query.zoom_x) {
@@ -599,6 +608,8 @@
     var edge_end_x_offset;
     var edge_end_y_offset;
 
+    var transition_duration = 500;
+
     var data = {};
     var svg;
 
@@ -610,11 +621,18 @@
         if (!update_history.timer) {
           update_history.timer = root.setTimeout(function () {
             var uri = get_uri().addQuery("mode", "tree");
+            var close = get_path_prefix();
             var prefixes = $.map(data, function (v, k) {
-              if (k !== get_path_prefix()) {
+              unused(v);
+              if (k === get_path_prefix()) {
+                close = false;
+              } else {
                 return k;
               }
             }).sort();
+            if (close) {
+              uri.addQuery("close", close);
+            }
             if (prefixes.length > 0) {
               uri.addQuery("prefix", prefixes);
             }
@@ -761,7 +779,7 @@
       return svg.select(".node[data-key='" + prefix + "']");
     }
 
-    load = function (prefix) {
+    load = function (prefix, no_transition) {
       var node_group = find_node(prefix);
       if (node_group.size() > 0) {
         start_spin(node_group, "fa-spinner");
@@ -773,7 +791,7 @@
         data[result.prefix] = result.items.sort(function (a, b) {
           return compare(a.key, b.key);
         });
-        update();
+        update(no_transition);
         update_history();
       }).fail(function () {
         if (node_group.size() > 0) {
@@ -783,13 +801,18 @@
       });
     };
 
-    update = function () {
+    update = function (no_transition) {
       var root_node = d3.hierarchy({ key: get_path_prefix() }, function (d) {
         return data[d.key];
       });
       layout(root_node);
 
-      var transition = d3.transition().duration(500);
+      var transition = d3.transition();
+      if (no_transition) {
+        transition.duration(0);
+      } else {
+        transition.duration(transition_duration);
+      }
 
       var edge_groups = svg.select(".edges")
         .selectAll(".edge")
@@ -916,10 +939,13 @@
       .classed("nodes", true);
 
     resize();
-    update();
-    $.each(get_prefixes(), function (i, v) {
-      load(v);
-    });
+    update(true);
+    if (!get_close()) {
+      $.each(get_prefixes(), function (i, v) {
+        unused(i);
+        load(v, true);
+      });
+    }
   };
 
   if (!root.dromozoa) {
