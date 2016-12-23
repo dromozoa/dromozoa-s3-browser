@@ -621,6 +621,7 @@
             var uri = get_uri().addQuery("mode", "tree");
             var close = get_path_prefix();
             var prefixes = $.map(data, function (v, k) {
+              unused(v);
               if (k === get_path_prefix()) {
                 close = false;
               } else {
@@ -934,6 +935,7 @@
     update();
     if (!get_close()) {
       $.each(get_prefixes(), function (i, v) {
+        unused(i);
         load(v);
       });
     }
