@@ -647,9 +647,10 @@
                   data[node.data.key] = undefined;
                 }
               });
+              set_icon(node_group, "fa-folder-o");
               update();
             } else {
-              load(key, node_group);
+              load(key);
             }
           }
         });
@@ -675,13 +676,18 @@
       update_node(node_group);
     }
 
-    load = function (prefix, node_group) {
+    function find_node(prefix) {
+      return svg.select(".node[data-key='" + prefix + "']");
+    }
+
+    load = function (prefix) {
+      var node_group = find_node(prefix);
       if (node_group) {
         start_spin(node_group, "fa-spinner");
       }
       list_bucket(get_origin_uri(), prefix).done(function (result) {
         if (node_group) {
-          reset_spin(node_group, key_to_info(prefix).icon);
+          reset_spin(node_group, "fa-folder-open-o");
         }
         data[result.prefix] = result.items.sort(function (a, b) {
           return compare(a.key, b.key);
@@ -709,15 +715,14 @@
           return d.data.key;
         });
 
-      edge_groups.enter()
-        .append("path")
-          .classed("edge", true)
-          .attr("fill", "none")
-          .attr("stroke", "black")
-          .attr("opacity", 0)
-          .attr("d", function (d) {
-            return create_edge_path(d.parent).toString();
-          });
+      edge_groups.enter().append("path")
+        .classed("edge", true)
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("opacity", 0)
+        .attr("d", function (d) {
+          return create_edge_path(d.parent).toString();
+        });
 
       edge_groups.exit()
         .classed("edge", false)
@@ -741,18 +746,20 @@
           return d.data.key;
         });
 
-      node_groups.enter()
-        .insert("g", ":first-child")
-          .classed("node", true)
-          .each(function (d) {
-            create_node(d3.select(this), d);
-          })
-          .attr("opacity", 0)
-          .attr("transform", function (d) {
-            if (d.parent) {
-              return "translate(" + d.parent.x + "," + d.parent.y + ")";
-            }
-          });
+      node_groups.enter().insert("g", ":first-child")
+        .classed("node", true)
+        .each(function (d) {
+          create_node(d3.select(this), d);
+        })
+        .attr("data-key", function (d) {
+          return d.data.key;
+        })
+        .attr("opacity", 0)
+        .attr("transform", function (d) {
+          if (d.parent) {
+            return "translate(" + d.parent.x + "," + d.parent.y + ")";
+          }
+        });
 
       node_groups.exit()
         .classed("node", false)
@@ -808,12 +815,10 @@
           .classed("model", true)
           .attr("transform", "translate(" + grid_x + "," + grid_y + ")");
 
-    model_group
-      .append("g")
-        .classed("edges", true);
-    model_group
-      .append("g")
-        .classed("nodes", true);
+    model_group.append("g")
+      .classed("edges", true);
+    model_group.append("g")
+      .classed("nodes", true);
 
     resize();
     update();
