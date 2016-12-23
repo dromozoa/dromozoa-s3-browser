@@ -650,7 +650,7 @@
               set_icon(node_group, "fa-folder-o");
               update();
             } else {
-              load(key, node_group);
+              load(key);
             }
           }
         });
@@ -676,7 +676,12 @@
       update_node(node_group);
     }
 
-    load = function (prefix, node_group) {
+    function find_node(prefix) {
+      return svg.select(".node[data-key='" + prefix + "']");
+    }
+
+    load = function (prefix) {
+      var node_group = find_node(prefix);
       if (node_group) {
         start_spin(node_group, "fa-spinner");
       }
@@ -812,12 +817,12 @@
 
     model_group.append("g")
       .classed("edges", true);
-    var node_group = model_group.append("g")
+    model_group.append("g")
       .classed("nodes", true);
 
     resize();
     update();
-    load(get_prefix(), node_group.select("[data-key='" + get_prefix() + "']"));
+    load(get_prefix());
   };
 
   if (!root.dromozoa) {
