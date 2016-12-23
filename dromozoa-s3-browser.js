@@ -319,6 +319,33 @@
     }
   }
 
+  function get_zoom_x() {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.zoom_x) {
+      return root.parseFloat(query.zoom_x);
+    } else {
+      return 0;
+    }
+  }
+
+  function get_zoom_y() {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.zoom_y) {
+      return root.parseFloat(query.zoom_y);
+    } else {
+      return 0;
+    }
+  }
+
+  function get_zoom_scale() {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.zoom_scale) {
+      return root.parseFloat(query.zoom_scale);
+    } else {
+      return 1;
+    }
+  }
+
   function create_navbar() {
     return $("<nav>")
       .addClass("navbar navbar-default navbar-fixed-top")
@@ -535,6 +562,13 @@
   };
 
   module.tree = function () {
+    var initial_zoom_x = get_zoom_x();
+    var initial_zoom_y = get_zoom_y();
+    var initial_zoom_scale = get_zoom_scale();
+    var zoom_x = initial_zoom_x;
+    var zoom_y = initial_zoom_y;
+    var zoom_scale = initial_zoom_scale;
+
     var font_awesome_fixed_width_em = 10 / 7;
     var name_x_em = font_awesome_fixed_width_em / 2;
     var icon_width_em = 0.5 + name_x_em;
@@ -553,6 +587,28 @@
 
     var load;
     var update;
+
+    function update_history() {
+      if (root.history && root.history.replaceState) {
+        if (!update_history.timer) {
+          update_history.timer = root.setTimeout(function () {
+            var uri = get_uri().addQuery("mode", "tree");
+            if (zoom_x !== 0) {
+              uri.addQuery("zoom_x", zoom_x);
+            }
+            if (zoom_y !== 0) {
+              uri.addQuery("zoom_y", zoom_y);
+            }
+            if (zoom_scale !== 1) {
+              uri.addQuery("zoom_scale", zoom_scale);
+            }
+            root.console.log(uri.toString());
+            root.history.replaceState(null, null, uri.toString());
+            delete update_history.timer;
+          }, 500);
+        }
+      }
+    }
 
     function layout(root_node) {
       var position = 0;
@@ -802,8 +858,15 @@
     svg.append("g")
       .classed("viewport", true)
       .call(d3.zoom().on("zoom", function () {
+        var transform = d3.event.transform
+          .translate(initial_zoom_x, initial_zoom_y)
+          .scale(initial_zoom_scale);
+        zoom_x = transform.x;
+        zoom_y = transform.y;
+        zoom_scale = transform.k;
         svg.select(".view")
-          .attr("transform", d3.event.transform.toString());
+          .attr("transform", transform.toString());
+        update_history();
       }))
       .append("rect")
         .attr("fill", "white");
@@ -811,6 +874,12 @@
     var model_group = svg.select(".viewport")
       .append("g")
         .classed("view", true)
+        .attr("transform", function () {
+          var transform = d3.zoomTransform(this)
+            .translate(initial_zoom_x, initial_zoom_y)
+            .scale(initial_zoom_scale);
+          return transform.toString();
+        })
         .append("g")
           .classed("model", true)
           .attr("transform", "translate(" + grid_x + "," + grid_y + ")");
