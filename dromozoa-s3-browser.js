@@ -304,10 +304,27 @@
   function get_prefix() {
     var query = root.URI.parseQuery(new root.URI().query());
     if (query.prefix) {
-      return query.prefix;
+      if (typeof query.prefix === "string") {
+        return query.prefix;
+      } else {
+        return query.prefix[0];
+      }
     } else {
       return get_path_prefix();
     }
+  }
+
+  function get_prefixes() {
+    var query = root.URI.parseQuery(new root.URI().query());
+    var prefixes = [ get_path_prefix() ];
+    if (query.prefix) {
+      if (typeof query.prefix === "string") {
+        push(prefixes, [ query.prefix ]);
+      } else {
+        push(prefixes, query.prefix);
+      }
+    }
+    return prefixes;
   }
 
   function get_mode() {
@@ -316,6 +333,33 @@
       return query.mode;
     } else {
       return "list";
+    }
+  }
+
+  function get_zoom_x() {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.zoom_x) {
+      return root.parseFloat(query.zoom_x);
+    } else {
+      return 0;
+    }
+  }
+
+  function get_zoom_y() {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.zoom_y) {
+      return root.parseFloat(query.zoom_y);
+    } else {
+      return 0;
+    }
+  }
+
+  function get_zoom_scale() {
+    var query = root.URI.parseQuery(new root.URI().query());
+    if (query.zoom_scale) {
+      return root.parseFloat(query.zoom_scale);
+    } else {
+      return 1;
     }
   }
 
@@ -535,6 +579,13 @@
   };
 
   module.tree = function () {
+    var initial_zoom_x = get_zoom_x();
+    var initial_zoom_y = get_zoom_y();
+    var initial_zoom_scale = get_zoom_scale();
+    var zoom_x = initial_zoom_x;
+    var zoom_y = initial_zoom_y;
+    var zoom_scale = initial_zoom_scale;
+
     var font_awesome_fixed_width_em = 10 / 7;
     var name_x_em = font_awesome_fixed_width_em / 2;
     var icon_width_em = 0.5 + name_x_em;
@@ -553,6 +604,35 @@
 
     var load;
     var update;
+
+    function update_history() {
+      if (root.history && root.history.replaceState) {
+        if (!update_history.timer) {
+          update_history.timer = root.setTimeout(function () {
+            var uri = get_uri().addQuery("mode", "tree");
+            var prefixes = $.map(data, function (v, k) {
+              if (k !== get_path_prefix()) {
+                return k;
+              }
+            }).sort();
+            if (prefixes.length > 0) {
+              uri.addQuery("prefix", prefixes);
+            }
+            if (zoom_x !== 0) {
+              uri.addQuery("zoom_x", zoom_x);
+            }
+            if (zoom_y !== 0) {
+              uri.addQuery("zoom_y", zoom_y);
+            }
+            if (zoom_scale !== 1) {
+              uri.addQuery("zoom_scale", zoom_scale);
+            }
+            root.history.replaceState(null, null, uri.toString());
+            delete update_history.timer;
+          }, 500);
+        }
+      }
+    }
 
     function layout(root_node) {
       var position = 0;
@@ -644,11 +724,12 @@
             if (data[key]) {
               d.eachAfter(function (node) {
                 if (node.data.key.endsWith("/")) {
-                  data[node.data.key] = undefined;
+                  delete data[node.data.key];
                 }
               });
               set_icon(node_group, "fa-folder-o");
               update();
+              update_history();
             } else {
               load(key);
             }
@@ -682,19 +763,20 @@
 
     load = function (prefix) {
       var node_group = find_node(prefix);
-      if (node_group) {
+      if (node_group.size() > 0) {
         start_spin(node_group, "fa-spinner");
       }
       list_bucket(get_origin_uri(), prefix).done(function (result) {
-        if (node_group) {
+        if (node_group.size() > 0) {
           reset_spin(node_group, "fa-folder-open-o");
         }
         data[result.prefix] = result.items.sort(function (a, b) {
           return compare(a.key, b.key);
         });
         update();
+        update_history();
       }).fail(function () {
-        if (node_group) {
+        if (node_group.size() > 0) {
           reset_spin(node_group, key_to_info(prefix).icon);
         }
         error("could not load");
@@ -702,7 +784,7 @@
     };
 
     update = function () {
-      var root_node = d3.hierarchy({ key: get_prefix() }, function (d) {
+      var root_node = d3.hierarchy({ key: get_path_prefix() }, function (d) {
         return data[d.key];
       });
       layout(root_node);
@@ -802,8 +884,15 @@
     svg.append("g")
       .classed("viewport", true)
       .call(d3.zoom().on("zoom", function () {
+        var transform = d3.event.transform
+          .translate(initial_zoom_x, initial_zoom_y)
+          .scale(initial_zoom_scale);
+        zoom_x = transform.x;
+        zoom_y = transform.y;
+        zoom_scale = transform.k;
         svg.select(".view")
-          .attr("transform", d3.event.transform.toString());
+          .attr("transform", transform.toString());
+        update_history();
       }))
       .append("rect")
         .attr("fill", "white");
@@ -811,6 +900,12 @@
     var model_group = svg.select(".viewport")
       .append("g")
         .classed("view", true)
+        .attr("transform", function () {
+          var transform = d3.zoomTransform(this)
+            .translate(initial_zoom_x, initial_zoom_y)
+            .scale(initial_zoom_scale);
+          return transform.toString();
+        })
         .append("g")
           .classed("model", true)
           .attr("transform", "translate(" + grid_x + "," + grid_y + ")");
@@ -822,7 +917,9 @@
 
     resize();
     update();
-    load(get_prefix());
+    $.each(get_prefixes(), function (i, v) {
+      load(v);
+    });
   };
 
   if (!root.dromozoa) {
